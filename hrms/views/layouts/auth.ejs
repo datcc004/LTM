@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1e40af">
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+  <title><%= typeof title !== 'undefined' ? title : 'KIDS PARK HRMS' %></title>
+
+  <link rel="stylesheet" href="/vendor/fontsource/be-vietnam-pro/400.css">
+  <link rel="stylesheet" href="/vendor/fontsource/be-vietnam-pro/500.css">
+  <link rel="stylesheet" href="/vendor/fontsource/be-vietnam-pro/600.css">
+  <link rel="stylesheet" href="/vendor/fontsource/be-vietnam-pro/700.css">
+  <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth-body">
+  <main class="auth-main">
+    <%- body %>
+  </main>
+
+  <script src="/vendor/alpine/cdn.min.js" defer></script>
+  <script src="/vendor/lucide/dist/umd/lucide.min.js" defer></script>
+  <script src="/js/main.js" defer></script>
+</body>
+</html>

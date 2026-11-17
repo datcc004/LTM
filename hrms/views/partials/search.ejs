@@ -1,0 +1,42 @@
+<div class="search-overlay" x-show="searchOpen" x-transition.opacity x-cloak style="display:none;" @click.self="closeSearch()">
+  <div class="search-dialog" role="dialog" aria-modal="true" aria-label="Tìm kiếm nhanh">
+    <div class="search-dialog-input">
+      <i data-lucide="search" class="icon" aria-hidden="true"></i>
+      <input type="search" x-ref="searchInput" placeholder="Tìm nhân viên, phòng ban, đơn từ..." aria-label="Nhập từ khóa tìm kiếm"
+             autocomplete="off" @input.debounce.300ms="runSearch($el.value)">
+      <kbd class="header-kbd">ESC</kbd>
+    </div>
+    <div class="search-dialog-body">
+      <template x-if="searchLoading">
+        <div class="search-state"><i data-lucide="loader-circle" class="icon icon-spin" aria-hidden="true"></i> Đang tìm...</div>
+      </template>
+      <template x-if="!searchLoading && !searchResults.length">
+        <div class="search-state search-state-empty">
+          <i data-lucide="search-x" class="icon" aria-hidden="true"></i>
+          <p x-text="searchQuery ? 'Không tìm thấy kết quả phù hợp' : 'Nhập từ khóa để bắt đầu tìm kiếm'"></p>
+        </div>
+      </template>
+      <template x-if="!searchLoading && searchResults.length">
+        <ul class="search-results">
+          <template x-for="result in searchResults" :key="result.id">
+            <li>
+              <a :href="result.url" class="search-result-item">
+                <span class="search-result-icon"><i data-lucide="user-round" class="icon icon-sm" aria-hidden="true"></i></span>
+                <span class="search-result-info">
+                  <strong x-text="result.title"></strong>
+                  <small x-text="result.subtitle"></small>
+                </span>
+                <i data-lucide="corner-down-left" class="icon icon-xs search-result-arrow" aria-hidden="true"></i>
+              </a>
+            </li>
+          </template>
+        </ul>
+      </template>
+    </div>
+    <div class="search-dialog-footer">
+      <span><kbd class="header-kbd">&uarr;</kbd> <kbd class="header-kbd">&darr;</kbd> di chuyển</span>
+      <span><kbd class="header-kbd">Enter</kbd> mở</span>
+      <span><kbd class="header-kbd">ESC</kbd> đóng</span>
+    </div>
+  </div>
+</div>

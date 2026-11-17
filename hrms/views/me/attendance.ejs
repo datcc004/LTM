@@ -1,0 +1,72 @@
+<%
+  function statusClass(status) {
+    var value = String(status || '');
+    if (value === 'Đúng giờ') return 'success';
+    if (value === 'Đi trễ' || value === 'Về sớm' || value === 'Thiếu giờ') return 'warning';
+    if (value === 'Vắng mặt') return 'danger';
+    return 'info';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1>Bảng công của tôi</h1>
+    <p>Lịch sử chấm công đã ghi nhận cho bạn. Bản ghi cần được duyệt mới tính vào lương.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/me/attendance" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterMonth">Tháng</label>
+        <select class="form-select" id="filterMonth" name="month">
+          <option value="">Tất cả tháng</option>
+          <% for (var m = 1; m <= 12; m += 1) { %>
+            <option value="<%= m %>" <%= String(filters.month) === String(m) ? 'selected' : '' %>><%= m %></option>
+          <% } %>
+        </select>
+        <label class="visually-hidden" for="filterYear">Năm</label>
+        <input type="number" class="form-control" id="filterYear" name="year" value="<%= filters.year %>" placeholder="Năm" min="2000" max="2100">
+        <button class="btn btn-primary" type="submit">Lọc</button>
+        <a class="btn btn-outline-secondary" href="/me/attendance">Xóa lọc</a>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Bảng công cá nhân</caption>
+        <thead>
+          <tr>
+            <th scope="col">Ngày</th>
+            <th scope="col">Ca</th>
+            <th scope="col">Giờ vào</th>
+            <th scope="col">Giờ ra</th>
+            <th scope="col" class="numeric">Trễ</th>
+            <th scope="col" class="numeric">Giờ công</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Duyệt</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(function (row) { %>
+            <tr>
+              <td><%= formatDate(row.work_date) %></td>
+              <td><%= row.shift_name || '—' %></td>
+              <td><%= row.check_in ? formatDateTime(row.check_in).slice(11) : '—' %></td>
+              <td><%= row.check_out ? formatDateTime(row.check_out).slice(11) : '—' %></td>
+              <td class="numeric"><%= row.late_minutes || 0 %> phút</td>
+              <td class="numeric"><%= formatNumber((row.worked_minutes || 0) / 60, 2) %></td>
+              <td><span class="badge badge-status <%= statusClass(row.status) %>"><%= row.status %></span></td>
+              <td><%= Number(row.is_approved) === 1 ? 'Đã duyệt' : 'Chờ duyệt' %></td>
+            </tr>
+          <% }); %>
+          <% if (!rows.length) { %>
+            <tr><td colspan="8" class="text-center text-muted py-4">Không có bản ghi chấm công nào.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination', { pagination: pagination, basePath: basePath, filterQuery: filterQuery }) %>
+  </div>
+</div>

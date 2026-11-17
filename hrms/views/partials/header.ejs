@@ -1,0 +1,158 @@
+<header class="app-header">
+  <div class="header-left">
+    <button type="button" class="btn-icon header-toggle" @click="toggleSidebar()" :aria-label="sidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'" :title="sidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'">
+      <i data-lucide="panel-left-close" class="icon" x-show="!sidebarCollapsed" aria-hidden="true"></i>
+      <i data-lucide="panel-left-open" class="icon" x-show="sidebarCollapsed" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="btn-icon header-mobile-toggle d-lg-none" @click="toggleMobileNav()" aria-label="Mở menu điều hướng">
+      <i data-lucide="menu" class="icon" aria-hidden="true"></i>
+    </button>
+
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <ol class="breadcrumb-list">
+        <% breadcrumbs.forEach(function (crumb, index) { %>
+          <li class="breadcrumb-item <%= index === breadcrumbs.length - 1 ? 'is-current' : '' %>">
+            <% if (crumb.path && index !== breadcrumbs.length - 1) { %>
+              <a href="<%= crumb.path %>"><%= crumb.label %></a>
+            <% } else { %>
+              <span aria-current="page"><%= crumb.label %></span>
+            <% } %>
+          </li>
+          <% if (index < breadcrumbs.length - 1) { %>
+            <li class="breadcrumb-sep" aria-hidden="true"><i data-lucide="chevron-right" class="icon icon-xs"></i></li>
+          <% } %>
+        <% }); %>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="header-right">
+    <button type="button" class="header-search-trigger" @click="openSearch()" aria-label="Tìm kiếm nhanh">
+      <i data-lucide="search" class="icon icon-sm" aria-hidden="true"></i>
+      <span class="header-search-text">Tìm kiếm nhân viên, đơn từ...</span>
+      <kbd class="header-kbd">/</kbd>
+    </button>
+
+    <div class="header-dropdown" x-data="{ notifOpen: false }" @click.outside="notifOpen = false" @keydown.escape.window="notifOpen = false">
+      <button type="button" class="btn-icon header-icon-btn" @click="notifOpen = !notifOpen" :aria-expanded="notifOpen.toString()" aria-haspopup="true" aria-label="Thông báo">
+        <i data-lucide="bell" class="icon" aria-hidden="true"></i>
+        <% if (notifications.length) { %>
+          <span class="notif-dot" aria-label="<%= notifications.length %> thông báo mới"></span>
+        <% } %>
+      </button>
+      <div class="dropdown-panel notifications-panel" x-show="notifOpen" x-transition.opacity x-cloak>
+        <div class="dropdown-panel-header">
+          <strong>Thông báo</strong>
+          <% if (notifications.length) { %><span class="text-muted small"><%= notifications.length %> mới</span><% } %>
+        </div>
+        <div class="notifications-list">
+          <% if (notifications.length) { %>
+            <% notifications.forEach(function (note) { %>
+              <a class="notification-item" href="<%= note.url || '#' %>">
+                <span class="notification-icon" aria-hidden="true"><i data-lucide="<%= note.icon || 'info' %>" class="icon icon-sm"></i></span>
+                <span class="notification-body">
+                  <strong><%= note.title %></strong>
+                  <span><%= note.message %></span>
+                  <small><%= note.time || '' %></small>
+                </span>
+              </a>
+            <% }); %>
+          <% } else { %>
+            <div class="dropdown-empty">
+              <i data-lucide="bell-off" class="icon" aria-hidden="true"></i>
+              <p>Không có thông báo mới</p>
+            </div>
+          <% } %>
+        </div>
+        <div class="dropdown-panel-footer">
+          <a href="/notifications">Xem tất cả thông báo</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-dropdown" x-data="{ userOpen: false, passwordOpen: false }" @click.outside="userOpen = false" @keydown.escape.window="userOpen = false; passwordOpen = false">
+      <button type="button" class="header-user-btn" @click="userOpen = !userOpen" :aria-expanded="userOpen.toString()" aria-haspopup="true" aria-label="Menu tài khoản">
+        <span class="avatar avatar-sm" aria-hidden="true">
+          <% if (user && user.avatar_path) { %>
+            <img src="/uploads/<%= user.avatar_path %>" alt="">
+          <% } else { %>
+            <%= (user && (user.full_name || user.username) || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase() %>
+          <% } %>
+        </span>
+        <span class="header-user-info">
+          <strong><%= user ? (user.full_name || user.username) : 'Người dùng' %></strong>
+          <small><%= user ? user.role : '—' %></small>
+        </span>
+        <i data-lucide="chevron-down" class="icon icon-xs" aria-hidden="true"></i>
+      </button>
+
+      <div class="dropdown-panel user-panel" x-show="userOpen" x-transition.opacity x-cloak>
+        <div class="dropdown-panel-header user-panel-header">
+          <span class="avatar avatar-md" aria-hidden="true">
+            <% if (user && user.avatar_path) { %>
+              <img src="/uploads/<%= user.avatar_path %>" alt="">
+            <% } else { %>
+              <%= (user && (user.full_name || user.username) || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase() %>
+            <% } %>
+          </span>
+          <span>
+            <strong><%= user ? (user.full_name || user.username) : 'Người dùng' %></strong>
+            <small><%= user ? user.email || user.username : '' %></small>
+          </span>
+        </div>
+        <div class="dropdown-menu-list">
+          <a class="dropdown-menu-item" href="/account/profile">
+            <i data-lucide="id-card" class="icon icon-sm" aria-hidden="true"></i><span>Thông tin cá nhân</span>
+          </a>
+          <button type="button" class="dropdown-menu-item" @click="passwordOpen = true; userOpen = false">
+            <i data-lucide="key-round" class="icon icon-sm" aria-hidden="true"></i><span>Đổi mật khẩu</span>
+          </button>
+          <a class="dropdown-menu-item" href="/account/settings">
+            <i data-lucide="settings-2" class="icon icon-sm" aria-hidden="true"></i><span>Cài đặt</span>
+          </a>
+        </div>
+        <div class="dropdown-panel-footer">
+          <form action="/logout" method="post" class="logout-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="dropdown-menu-item text-danger">
+              <i data-lucide="log-out" class="icon icon-sm" aria-hidden="true"></i><span>Đăng xuất</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="modal-backdrop-custom" x-show="passwordOpen" x-transition.opacity x-cloak style="display:none;">
+        <div class="modal-dialog-custom" role="dialog" aria-modal="true" aria-labelledby="changePasswordTitle" @click.outside="passwordOpen = false">
+          <form action="/account/change-password" method="post" x-ref="passwordForm">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="modal-header-custom">
+              <h2 id="changePasswordTitle">Đổi mật khẩu</h2>
+              <button type="button" class="btn-icon" @click="passwordOpen = false" aria-label="Đóng">
+                <i data-lucide="x" class="icon" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="modal-body-custom">
+              <div class="form-field">
+                <label for="oldPassword">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="oldPassword" name="old_password" autocomplete="current-password" required>
+              </div>
+              <div class="form-field">
+                <label for="newPassword">Mật khẩu mới <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="newPassword" name="new_password" autocomplete="new-password" minlength="6" required>
+                <small class="form-hint">Tối thiểu 6 ký tự, nên kết hợp chữ cái, số và ký tự đặc biệt.</small>
+              </div>
+              <div class="form-field">
+                <label for="confirmPassword">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="confirmPassword" name="confirm_password" autocomplete="new-password" minlength="6" required>
+              </div>
+            </div>
+            <div class="modal-footer-custom">
+              <button type="button" class="btn btn-outline-secondary" @click="passwordOpen = false">Hủy</button>
+              <button type="submit" class="btn btn-primary"><i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> Lưu thay đổi</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

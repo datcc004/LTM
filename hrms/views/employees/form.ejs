@@ -1,0 +1,197 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+  const placeholderAvatar = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2265%22 font-size=%2236%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3ENV%3C/text%3E%3C/svg%3E';
+  const avatarSrc = (item && item.avatar_path) ? item.avatar_path : placeholderAvatar;
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p><%= item ? 'Cập nhật hồ sơ và thông tin công việc.' : 'Mã nhân viên sẽ được hệ thống cấp tự động theo dạng NV####.' %></p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2><%= item ? 'Hồ sơ ' + item.employee_code : 'Thông tin nhân viên mới' %></h2>
+  </div>
+  <div class="card-body">
+    <form action="<%= item ? '/employees/' + item.id : '/employees' %>" method="post" enctype="multipart/form-data" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (item) { %><input type="hidden" name="_method" value="put"><% } %>
+
+      <ul class="nav nav-tabs" role="tablist" aria-label="Nhóm thông tin nhân viên">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="tabPersonal" data-bs-toggle="tab" data-bs-target="#panePersonal"
+                  type="button" role="tab" aria-controls="panePersonal" aria-selected="true">Thông tin cá nhân</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tabJob" data-bs-toggle="tab" data-bs-target="#paneJob"
+                  type="button" role="tab" aria-controls="paneJob" aria-selected="false">Thông tin công việc</button>
+        </li>
+      </ul>
+
+      <div class="tab-content pt-4">
+        <div class="tab-pane fade show active" id="panePersonal" role="tabpanel" aria-labelledby="tabPersonal">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <div class="row g-3">
+                <div class="col-md-7">
+                  <div class="form-field">
+                    <label for="full_name">Họ và tên <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control <%= errorFor('full_name') ? 'is-invalid' : '' %>"
+                           id="full_name" name="full_name" maxlength="120" required value="<%= value('full_name') %>">
+                    <% if (errorFor('full_name')) { %><div class="invalid-feedback"><%= errorFor('full_name') %></div><% } %>
+                  </div>
+                </div>
+                <div class="col-md-5">
+                  <div class="form-field">
+                    <label for="gender">Giới tính <span class="text-danger">*</span></label>
+                    <select class="form-select <%= errorFor('gender') ? 'is-invalid' : '' %>" id="gender" name="gender" required>
+                      <% ['Nam', 'Nữ', 'Khác'].forEach(function (option) { %>
+                        <option value="<%= option %>" <%= value('gender') === option ? 'selected' : '' %>><%= option %></option>
+                      <% }); %>
+                    </select>
+                    <% if (errorFor('gender')) { %><div class="invalid-feedback"><%= errorFor('gender') %></div><% } %>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-field">
+                    <label for="date_of_birth">Ngày sinh</label>
+                    <input type="date" class="form-control <%= errorFor('date_of_birth') ? 'is-invalid' : '' %>"
+                           id="date_of_birth" name="date_of_birth" value="<%= value('date_of_birth') %>">
+                    <% if (errorFor('date_of_birth')) { %><div class="invalid-feedback"><%= errorFor('date_of_birth') %></div><% } %>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-field">
+                    <label for="id_card">Số CCCD/CMND</label>
+                    <input type="text" class="form-control <%= errorFor('id_card') ? 'is-invalid' : '' %>"
+                           id="id_card" name="id_card" maxlength="20" value="<%= value('id_card') %>">
+                    <% if (errorFor('id_card')) { %><div class="invalid-feedback"><%= errorFor('id_card') %></div><% } %>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-field">
+                    <label for="phone">Điện thoại</label>
+                    <input type="tel" class="form-control <%= errorFor('phone') ? 'is-invalid' : '' %>"
+                           id="phone" name="phone" maxlength="20" value="<%= value('phone') %>">
+                    <% if (errorFor('phone')) { %><div class="invalid-feedback"><%= errorFor('phone') %></div><% } %>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-field">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control <%= errorFor('email') ? 'is-invalid' : '' %>"
+                           id="email" name="email" maxlength="120" value="<%= value('email') %>">
+                    <% if (errorFor('email')) { %><div class="invalid-feedback"><%= errorFor('email') %></div><% } %>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="form-field">
+                    <label for="address">Địa chỉ</label>
+                    <input type="text" class="form-control <%= errorFor('address') ? 'is-invalid' : '' %>"
+                           id="address" name="address" maxlength="255" value="<%= value('address') %>">
+                    <% if (errorFor('address')) { %><div class="invalid-feedback"><%= errorFor('address') %></div><% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="form-field">
+                <label for="avatar">Ảnh đại diện</label>
+                <div class="d-flex align-items-center gap-3 mb-2">
+                  <img data-avatar-preview src="<%= avatarSrc %>" alt="Xem trước ảnh đại diện" class="avatar avatar-lg">
+                  <div>
+                    <input type="file" class="form-control <%= errorFor('avatar') ? 'is-invalid' : '' %>"
+                           id="avatar" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif"
+                           data-avatar-input data-avatar-target="[data-avatar-preview]"
+                           aria-describedby="avatarHint">
+                    <span class="form-hint" id="avatarHint">JPG, PNG, WEBP hoặc GIF. Tối đa 2 MB.</span>
+                  </div>
+                </div>
+                <% if (errorFor('avatar')) { %><div class="invalid-feedback"><%= errorFor('avatar') %></div><% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="paneJob" role="tabpanel" aria-labelledby="tabJob">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="form-field">
+                <label for="department_id">Phòng ban <span class="text-danger">*</span></label>
+                <select class="form-select <%= errorFor('department_id') ? 'is-invalid' : '' %>"
+                        id="department_id" name="department_id" required>
+                  <option value="">— Chọn phòng ban —</option>
+                  <% departments.forEach(function (option) { %>
+                    <option value="<%= option.id %>" <%= String(value('department_id')) === String(option.id) ? 'selected' : '' %>><%= option.name %></option>
+                  <% }); %>
+                </select>
+                <% if (errorFor('department_id')) { %><div class="invalid-feedback"><%= errorFor('department_id') %></div><% } %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-field">
+                <label for="position_id">Chức vụ <span class="text-danger">*</span></label>
+                <select class="form-select <%= errorFor('position_id') ? 'is-invalid' : '' %>"
+                        id="position_id" name="position_id" required>
+                  <option value="">— Chọn chức vụ —</option>
+                  <% positions.forEach(function (option) { %>
+                    <option value="<%= option.id %>" <%= String(value('position_id')) === String(option.id) ? 'selected' : '' %>><%= option.name %></option>
+                  <% }); %>
+                </select>
+                <% if (errorFor('position_id')) { %><div class="invalid-feedback"><%= errorFor('position_id') %></div><% } %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-field">
+                <label for="manager_id">Quản lý trực tiếp</label>
+                <select class="form-select <%= errorFor('manager_id') ? 'is-invalid' : '' %>" id="manager_id" name="manager_id">
+                  <option value="">— Không có —</option>
+                  <% managers.forEach(function (option) { %>
+                    <option value="<%= option.id %>" <%= String(value('manager_id')) === String(option.id) ? 'selected' : '' %>><%= option.full_name %> (<%= option.employee_code %>)</option>
+                  <% }); %>
+                </select>
+                <% if (errorFor('manager_id')) { %><div class="invalid-feedback"><%= errorFor('manager_id') %></div><% } %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-field">
+                <label for="hire_date">Ngày vào làm <span class="text-danger">*</span></label>
+                <input type="date" class="form-control <%= errorFor('hire_date') ? 'is-invalid' : '' %>"
+                       id="hire_date" name="hire_date" required value="<%= value('hire_date') %>">
+                <% if (errorFor('hire_date')) { %><div class="invalid-feedback"><%= errorFor('hire_date') %></div><% } %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-field">
+                <label for="status">Trạng thái <span class="text-danger">*</span></label>
+                <select class="form-select <%= errorFor('status') ? 'is-invalid' : '' %>" id="status" name="status" required>
+                  <% ['Đang làm việc', 'Tạm nghỉ', 'Nghỉ việc'].forEach(function (option) { %>
+                    <option value="<%= option %>" <%= value('status') === option ? 'selected' : '' %>><%= option %></option>
+                  <% }); %>
+                </select>
+                <% if (errorFor('status')) { %><div class="invalid-feedback"><%= errorFor('status') %></div><% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Thêm nhân viên' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="<%= item ? '/employees/' + item.id : '/employees' %>">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

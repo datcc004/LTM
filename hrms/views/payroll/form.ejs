@@ -1,0 +1,67 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (entry) { return entry.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p>Từ tháng và năm, hệ thống tự sinh mã kỳ lương và thời gian từ ngày đầu đến cuối tháng.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Thông tin kỳ lương</h2></div>
+  <div class="card-body">
+    <form action="<%= item ? '/payroll/' + item.id : '/payroll' %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (item) { %><input type="hidden" name="_method" value="put"><% } %>
+
+      <div class="row g-3">
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="month">Tháng <span class="text-danger">*</span></label>
+            <select class="form-select <%= errorFor('month') ? 'is-invalid' : '' %>" id="month" name="month" required>
+              <% for (let m = 1; m <= 12; m += 1) { %>
+                <option value="<%= m %>" <%= Number(value('month')) === m ? 'selected' : '' %>><%= m %></option>
+              <% } %>
+            </select>
+            <% if (errorFor('month')) { %><div class="invalid-feedback"><%= errorFor('month') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="year">Năm <span class="text-danger">*</span></label>
+            <input type="number" class="form-control <%= errorFor('year') ? 'is-invalid' : '' %>"
+                   id="year" name="year" min="2000" max="2100" required value="<%= value('year') %>">
+            <% if (errorFor('year')) { %><div class="invalid-feedback"><%= errorFor('year') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="note">Ghi chú</label>
+            <input type="text" class="form-control <%= errorFor('note') ? 'is-invalid' : '' %>"
+                   id="note" name="note" maxlength="500" value="<%= value('note') %>" placeholder="Ghi chú kỳ lương">
+            <% if (errorFor('note')) { %><div class="invalid-feedback"><%= errorFor('note') %></div><% } %>
+          </div>
+        </div>
+      </div>
+
+      <% if (item && item.start_date) { %>
+        <p class="text-muted mt-3 mb-0">Kỳ hiện tại: <%= formatDate(item.start_date) %> – <%= formatDate(item.end_date) %></p>
+      <% } %>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Thêm kỳ lương' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="/payroll">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

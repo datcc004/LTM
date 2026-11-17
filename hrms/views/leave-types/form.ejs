@@ -1,0 +1,98 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+  function checked(field) {
+    return String(value(field)) === '1' || value(field) === true;
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p>Để trống "Số ngày tối đa/năm" nếu loại phép không giới hạn quỹ (ví dụ: nghỉ không lương).</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Thông tin loại phép</h2></div>
+  <div class="card-body">
+    <form action="<%= item ? '/leave-types/' + item.id : '/leave-types' %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (item) { %><input type="hidden" name="_method" value="put"><% } %>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="code">Mã loại phép <span class="text-danger">*</span></label>
+            <input type="text" class="form-control <%= errorFor('code') ? 'is-invalid' : '' %>"
+                   id="code" name="code" maxlength="30" required value="<%= value('code') %>" placeholder="PHEP_NAM">
+            <% if (errorFor('code')) { %><div class="invalid-feedback"><%= errorFor('code') %></div><% } else { %><span class="form-hint">Chữ, số, dấu gạch dưới; không trùng mã cũ.</span><% } %>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="form-field">
+            <label for="name">Tên loại phép <span class="text-danger">*</span></label>
+            <input type="text" class="form-control <%= errorFor('name') ? 'is-invalid' : '' %>"
+                   id="name" name="name" maxlength="100" required value="<%= value('name') %>" placeholder="Phép năm">
+            <% if (errorFor('name')) { %><div class="invalid-feedback"><%= errorFor('name') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="max_days_per_year">Số ngày tối đa/năm</label>
+            <input type="number" class="form-control <%= errorFor('max_days_per_year') ? 'is-invalid' : '' %>"
+                   id="max_days_per_year" name="max_days_per_year" min="0" max="365" step="0.5" value="<%= value('max_days_per_year') %>" placeholder="12">
+            <% if (errorFor('max_days_per_year')) { %><div class="invalid-feedback"><%= errorFor('max_days_per_year') %></div><% } else { %><span class="form-hint">Trống = không giới hạn quỹ.</span><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="color">Màu hiển thị</label>
+            <input type="text" class="form-control <%= errorFor('color') ? 'is-invalid' : '' %>"
+                   id="color" name="color" maxlength="20" value="<%= value('color') %>" placeholder="#2563eb">
+            <% if (errorFor('color')) { %><div class="invalid-feedback"><%= errorFor('color') %></div><% } else { %><span class="form-hint">Định dạng #RRGGBB.</span><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="is_paid">Hưởng lương</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="is_paid" name="is_paid" value="1" <%= checked('is_paid') ? 'checked' : '' %>>
+              <label class="form-check-label" for="is_paid">Loại phép được hưởng lương</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="requires_approval">Cần phê duyệt</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="requires_approval" name="requires_approval" value="1" <%= checked('requires_approval') ? 'checked' : '' %>>
+              <label class="form-check-label" for="requires_approval">Đơn phải được duyệt trước khi có hiệu lực</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="is_active">Trạng thái áp dụng</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" <%= checked('is_active') ? 'checked' : '' %>>
+              <label class="form-check-label" for="is_active">Đang áp dụng</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Thêm loại phép' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="/leave-types">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

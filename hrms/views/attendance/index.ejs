@@ -1,0 +1,208 @@
+<%
+  const role = (typeof user !== 'undefined' && user && user.role) ? user.role : '';
+  const canEdit = ['ADMIN', 'HR'].indexOf(role) !== -1;
+  const canApprove = ['ADMIN', 'HR', 'MANAGER'].indexOf(role) !== -1;
+  function statusBadge(status) {
+    if (status === 'Đúng giờ') return 'success';
+    if (status === 'Đi trễ') return 'warning';
+    if (status === 'Về sớm') return 'warning';
+    if (status === 'Thiếu giờ') return 'danger';
+    return 'info';
+  }
+  function overtimeHours(minutes) { return (Number(minutes || 0) / 60).toFixed(1); }
+%>
+<div class="page-heading">
+  <div>
+    <h1>Bảng chấm công</h1>
+    <p>Theo dõi giờ vào/ra, trạng thái công và làm thêm giờ của nhân viên.</p>
+  </div>
+  <div class="page-actions">
+    <% if (canEdit) { %>
+      <a class="btn btn-primary" href="/attendance/create">
+        <i data-lucide="plus" class="icon icon-sm" aria-hidden="true"></i> Thêm bản ghi công
+      </a>
+    <% } %>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <span class="kpi-icon"><i data-lucide="calendar-check-2" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Tổng bản ghi</span>
+      <span class="kpi-value"><%= formatNumber(summary.total) %></span>
+      <span class="kpi-trend"><%= formatNumber(summary.approved) %> bản ghi đã duyệt</span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-success"><i data-lucide="circle-check-big" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Đúng giờ</span>
+      <span class="kpi-value"><%= formatNumber(summary.on_time) %></span>
+      <span class="kpi-trend"><%= summary.total ? Math.round(summary.on_time / summary.total * 100) : 0 %>% tổng công</span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-warning"><i data-lucide="clock-alert" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Đi trễ / Về sớm</span>
+      <span class="kpi-value"><%= formatNumber(summary.late + summary.early) %></span>
+      <span class="kpi-trend">Trễ <%= formatNumber(summary.late) %> · Sớm <%= formatNumber(summary.early) %></span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-danger"><i data-lucide="circle-x" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Thiếu giờ / Vắng mặt</span>
+      <span class="kpi-value"><%= formatNumber(summary.insufficient + summary.absent) %></span>
+      <span class="kpi-trend">Thiếu <%= formatNumber(summary.insufficient) %> · Vắng <%= formatNumber(summary.absent) %></span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-info"><i data-lucide="timer" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Làm thêm giờ</span>
+      <span class="kpi-value"><%= overtimeHours(summary.overtime_minutes) %> giờ</span>
+      <span class="kpi-trend">Tổng công: <%= (Number(summary.worked_minutes || 0) / 60).toFixed(1) %> giờ</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/attendance" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterEmployee">Nhân viên</label>
+        <select class="form-select" id="filterEmployee" name="employee_id">
+          <option value="">Tất cả nhân viên</option>
+          <% employees.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.employee_id === String(option.id) ? 'selected' : '' %>><%= option.full_name %> (<%= option.employee_code %>)</option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterDepartment">Phòng ban</label>
+        <select class="form-select" id="filterDepartment" name="department_id">
+          <option value="">Tất cả phòng ban</option>
+          <% departments.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.department_id === String(option.id) ? 'selected' : '' %>><%= option.name %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterShift">Ca làm việc</label>
+        <select class="form-select" id="filterShift" name="shift_id">
+          <option value="">Tất cả ca</option>
+          <% shifts.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.shift_id === String(option.id) ? 'selected' : '' %>><%= option.name %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterStatus">Trạng thái</label>
+        <select class="form-select" id="filterStatus" name="status">
+          <option value="">Tất cả trạng thái</option>
+          <% statuses.forEach(function (option) { %>
+            <option value="<%= option %>" <%= query.status === option ? 'selected' : '' %>><%= option %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterApproved">Duyệt</label>
+        <select class="form-select" id="filterApproved" name="is_approved">
+          <option value="">Tất cả</option>
+          <option value="1" <%= query.is_approved === '1' ? 'selected' : '' %>>Đã duyệt</option>
+          <option value="0" <%= query.is_approved === '0' ? 'selected' : '' %>>Chưa duyệt</option>
+        </select>
+        <label class="visually-hidden" for="filterFrom">Từ ngày</label>
+        <input type="date" class="form-control" id="filterFrom" name="from_date" value="<%= query.from_date %>">
+        <label class="visually-hidden" for="filterTo">Đến ngày</label>
+        <input type="date" class="form-control" id="filterTo" name="to_date" value="<%= query.to_date %>">
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/attendance">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> bản ghi</span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách bản ghi chấm công</caption>
+        <thead>
+          <tr>
+            <th scope="col">Ngày</th>
+            <th scope="col">Nhân viên</th>
+            <th scope="col">Ca</th>
+            <th scope="col">Giờ vào</th>
+            <th scope="col">Giờ ra</th>
+            <th scope="col" class="numeric">Công (giờ)</th>
+            <th scope="col">Trễ / Sớm</th>
+            <th scope="col" class="numeric">OT (giờ)</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Duyệt</th>
+            <th scope="col" class="action-col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (records.length) { %>
+            <% records.forEach(function (item) { %>
+              <tr>
+                <td><strong><%= formatDate(item.work_date, 'DD/MM/YYYY') %></strong></td>
+                <td>
+                  <%= item.full_name %>
+                  <br><small class="text-muted"><%= item.employee_code %><% if (item.department_name) { %> · <%= item.department_name %><% } %></small>
+                </td>
+                <td><%= item.shift_name || '—' %></td>
+                <td><%= item.check_in ? String(item.check_in).slice(11, 16) : '—' %></td>
+                <td><%= item.check_out ? String(item.check_out).slice(11, 16) : '—' %></td>
+                <td class="numeric"><%= (Number(item.worked_minutes || 0) / 60).toFixed(1) %></td>
+                <td>
+                  <% if (item.late_minutes || item.early_minutes) { %>
+                    <% if (item.late_minutes) { %><span class="badge badge-status warning">Trễ <%= item.late_minutes %>'</span><% } %>
+                    <% if (item.early_minutes) { %><span class="badge badge-status warning">Sớm <%= item.early_minutes %>'</span><% } %>
+                  <% } else { %>—<% } %>
+                </td>
+                <td class="numeric"><%= item.overtime_minutes ? overtimeHours(item.overtime_minutes) : '—' %></td>
+                <td><span class="badge badge-status <%= statusBadge(item.status) %>"><%= item.status %></span></td>
+                <td>
+                  <% if (item.is_approved) { %>
+                    <span class="badge badge-status success" title="<%= item.approved_by_name || '' %>">Đã duyệt</span>
+                  <% } else { %>
+                    <span class="badge badge-status info">Chưa duyệt</span>
+                  <% } %>
+                </td>
+                <td class="action-col">
+                  <% if (canEdit) { %>
+                    <a class="btn btn-sm btn-outline-secondary" href="/attendance/<%= item.id %>/edit" aria-label="Sửa công của <%= item.full_name %>">
+                      <i data-lucide="pencil" class="icon icon-xs" aria-hidden="true"></i> Sửa
+                    </a>
+                    <form method="post" action="/attendance/<%= item.id %>" class="d-inline">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="_method" value="delete">
+                      <button type="submit" class="btn btn-sm btn-outline-danger"
+                              data-confirm="Bạn có chắc muốn xóa bản ghi công của <%= item.full_name %> ngày <%= formatDate(item.work_date, 'DD/MM/YYYY') %>?"
+                              data-confirm-title="Xác nhận xóa bản ghi công"
+                              data-confirm-danger>
+                        <i data-lucide="trash-2" class="icon icon-xs" aria-hidden="true"></i> Xóa
+                      </button>
+                    </form>
+                  <% } %>
+                  <% if (canApprove && !(role === 'MANAGER' && Number(item.employee_id) === Number(user.employee_id))) { %>
+                    <form method="post" action="/attendance/<%= item.id %>/approval" class="d-inline">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="_method" value="patch">
+                      <input type="hidden" name="is_approved" value="<%= item.is_approved ? '0' : '1' %>">
+                      <button type="submit" class="btn btn-sm <%= item.is_approved ? 'btn-outline-secondary' : 'btn-outline-primary' %>"
+                              data-confirm="Bạn có chắc <%= item.is_approved ? 'bỏ duyệt' : 'duyệt' %> bản ghi công này?"
+                              data-confirm-title="Xác nhận <%= item.is_approved ? 'bỏ duyệt' : 'duyệt' %> công">
+                        <i data-lucide="<%= item.is_approved ? 'undo-2' : 'check-check' %>" class="icon icon-xs" aria-hidden="true"></i>
+                        <%= item.is_approved ? 'Bỏ duyệt' : 'Duyệt' %>
+                      </button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="11" class="text-center text-muted py-4">Không có bản ghi chấm công nào phù hợp với bộ lọc.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

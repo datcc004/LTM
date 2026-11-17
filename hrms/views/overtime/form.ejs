@@ -1,0 +1,105 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p>Chọn ngày và khung giờ tăng ca; hệ thống tự tính số giờ và hệ số theo loại ngày.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Thông tin tăng ca</h2></div>
+  <div class="card-body">
+    <form action="<%= item ? '/overtime-requests/' + item.id : '/overtime-requests' %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (item) { %><input type="hidden" name="_method" value="put"><% } %>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="employee_id">Nhân viên <span class="text-danger">*</span></label>
+            <select class="form-select <%= errorFor('employee_id') ? 'is-invalid' : '' %>" id="employee_id" name="employee_id" required>
+              <option value="">— Chọn nhân viên —</option>
+              <% employees.forEach(function (option) { %>
+                <option value="<%= option.id %>" <%= String(value('employee_id')) === String(option.id) ? 'selected' : '' %>><%= option.full_name %> (<%= option.employee_code %>)</option>
+              <% }); %>
+            </select>
+            <% if (errorFor('employee_id')) { %><div class="invalid-feedback"><%= errorFor('employee_id') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="work_date">Ngày tăng ca <span class="text-danger">*</span></label>
+            <input type="date" class="form-control <%= errorFor('work_date') ? 'is-invalid' : '' %>"
+                   id="work_date" name="work_date" required value="<%= value('work_date') %>">
+            <% if (errorFor('work_date')) { %><div class="invalid-feedback"><%= errorFor('work_date') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="start_time">Giờ bắt đầu <span class="text-danger">*</span></label>
+            <input type="time" class="form-control <%= errorFor('start_time') ? 'is-invalid' : '' %>"
+                   id="start_time" name="start_time" required value="<%= String(value('start_time')).slice(0, 5) %>">
+            <% if (errorFor('start_time')) { %><div class="invalid-feedback"><%= errorFor('start_time') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="end_time">Giờ kết thúc <span class="text-danger">*</span></label>
+            <input type="time" class="form-control <%= errorFor('end_time') ? 'is-invalid' : '' %>"
+                   id="end_time" name="end_time" required value="<%= String(value('end_time')).slice(0, 5) %>">
+            <% if (errorFor('end_time')) { %><div class="invalid-feedback"><%= errorFor('end_time') %></div><% } else { %><span class="form-hint">Nhỏ hơn giờ bắt đầu = qua ngày.</span><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="day_type">Loại ngày <span class="text-danger">*</span></label>
+            <select class="form-select <%= errorFor('day_type') ? 'is-invalid' : '' %>" id="day_type" name="day_type" required>
+              <% dayTypes.forEach(function (option) { %>
+                <option value="<%= option %>" <%= value('day_type') === option ? 'selected' : '' %>><%= option %> (×<%= option === 'Ngày thường' ? '1.5' : (option === 'Cuối tuần' ? '2.0' : '3.0') %>)</option>
+              <% }); %>
+            </select>
+            <% if (errorFor('day_type')) { %><div class="invalid-feedback"><%= errorFor('day_type') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="form-field">
+            <label for="reason">Lý do tăng ca</label>
+            <textarea class="form-control <%= errorFor('reason') ? 'is-invalid' : '' %>" id="reason" name="reason" rows="4" maxlength="2000" placeholder="Ví dụ: hoàn thành báo cáo, triển khai phiên bản mới"><%= value('reason') %></textarea>
+            <% if (errorFor('reason')) { %><div class="invalid-feedback"><%= errorFor('reason') %></div><% } else { %><span class="form-hint">Tối đa 2000 ký tự.</span><% } %>
+          </div>
+        </div>
+      </div>
+
+      <% if (item) { %>
+        <div class="alert alert-light border mt-3 mb-0">
+          <strong>Đơn hiện tại:</strong>
+          <span class="badge badge-status <%= item.status === 'Đã duyệt' ? 'success' : (item.status === 'Từ chối' ? 'danger' : 'warning') %>"><%= item.status %></span>
+          · <%= formatNumber(item.total_hours, 1) %> giờ
+          · <%= item.day_type %> (×<%= formatNumber(item.rate_multiplier, 1) %>)
+          · <%= formatDate(item.work_date, 'DD/MM/YYYY') %>
+        </div>
+      <% } else { %>
+        <div class="alert alert-light border mt-3 mb-0">
+          <strong>Hệ số áp dụng:</strong> Ngày thường ×1.5 · Cuối tuần ×2.0 · Ngày lễ ×3.0.
+          Đơn mới có trạng thái <span class="badge badge-status warning">Chờ duyệt</span>.
+        </div>
+      <% } %>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Tạo đơn tăng ca' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="/overtime-requests">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

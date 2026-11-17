@@ -1,0 +1,20 @@
+<div class="modal-backdrop-custom" x-show="$store.confirm.open" x-transition.opacity x-cloak style="display:none;">
+  <div class="modal-dialog-custom modal-dialog-confirm" role="alertdialog" aria-modal="true"
+       aria-labelledby="confirmTitle" aria-describedby="confirmMessage"
+       x-ref="confirmDialog" @keydown.tab="trapConfirmTab($event)" @keydown.escape.window="cancelConfirm()">
+    <div class="modal-header-custom">
+      <span class="confirm-icon" :class="$store.confirm.danger ? 'is-danger' : 'is-info'" aria-hidden="true">
+        <i data-lucide="triangle-alert" class="icon" x-show="$store.confirm.danger"></i>
+        <i data-lucide="circle-help" class="icon" x-show="!$store.confirm.danger"></i>
+      </span>
+      <h2 id="confirmTitle" x-text="$store.confirm.title"></h2>
+    </div>
+    <div class="modal-body-custom">
+      <p id="confirmMessage" class="mb-0" x-text="$store.confirm.message"></p>
+    </div>
+    <div class="modal-footer-custom">
+      <button type="button" class="btn btn-outline-secondary" x-ref="confirmCancel" @click="cancelConfirm()" x-text="$store.confirm.cancelText"></button>
+      <button type="button" class="btn" :class="$store.confirm.danger ? 'btn-danger' : 'btn-primary'" x-ref="confirmAccept" @click="acceptConfirm()" x-text="$store.confirm.confirmText"></button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,17 @@
+<div class="toast-stack" role="region" aria-label="Thông báo" aria-live="polite">
+  <template x-for="toast in $store.toasts.items" :key="toast.id">
+    <div class="app-toast" :class="'toast-' + toast.type" x-transition:enter="toast-enter" x-transition:leave="toast-leave" role="status">
+      <span class="toast-icon" aria-hidden="true">
+        <i data-lucide="circle-check" class="icon icon-sm" x-show="toast.type === 'success'"></i>
+        <i data-lucide="circle-x" class="icon icon-sm" x-show="toast.type === 'error'"></i>
+        <i data-lucide="triangle-alert" class="icon icon-sm" x-show="toast.type === 'warning'"></i>
+        <i data-lucide="info" class="icon icon-sm" x-show="toast.type === 'info'"></i>
+      </span>
+      <span class="toast-message" x-text="toast.message"></span>
+      <button type="button" class="toast-close" @click="$store.toasts.remove(toast.id)" aria-label="Đóng thông báo">
+        <i data-lucide="x" class="icon icon-xs" aria-hidden="true"></i>
+      </button>
+      <span class="toast-progress" :style="{ animationDuration: toast.timeout + 'ms' }"></span>
+    </div>
+  </template>
+</div>

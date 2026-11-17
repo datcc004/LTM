@@ -1,0 +1,91 @@
+<div class="page-heading">
+  <div>
+    <h1>Loại phép</h1>
+    <p>Danh mục loại phép dùng khi lập đơn nghỉ và quản lý quỹ phép. Loại phép đang có đơn hoặc quỹ không thể xóa.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/leave-types/create">
+      <i data-lucide="plus" class="icon icon-sm" aria-hidden="true"></i> Thêm loại phép
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/leave-types" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterQ">Tìm kiếm</label>
+        <input type="search" class="form-control" id="filterQ" name="q" value="<%= query.q %>" placeholder="Mã hoặc tên loại phép">
+        <label class="visually-hidden" for="filterActive">Trạng thái</label>
+        <select class="form-select" id="filterActive" name="is_active">
+          <option value="">Tất cả trạng thái</option>
+          <option value="1" <%= query.is_active === '1' ? 'selected' : '' %>>Đang áp dụng</option>
+          <option value="0" <%= query.is_active === '0' ? 'selected' : '' %>>Ngưng áp dụng</option>
+        </select>
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/leave-types">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> loại phép</span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách loại phép</caption>
+        <thead>
+          <tr>
+            <th scope="col">Mã</th>
+            <th scope="col">Tên loại phép</th>
+            <th scope="col">Hưởng lương</th>
+            <th scope="col" class="numeric">Số ngày/năm</th>
+            <th scope="col">Cần duyệt</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col" class="numeric">Đơn / Quỹ</th>
+            <th scope="col" class="action-col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (records.length) { %>
+            <% records.forEach(function (item) { %>
+              <tr>
+                <td><strong><%= item.code %></strong></td>
+                <td><%= item.name %></td>
+                <td>
+                  <% if (Number(item.is_paid)) { %><span class="badge badge-status success">Có lương</span><% } else { %><span class="badge badge-status info">Không lương</span><% } %>
+                </td>
+                <td class="numeric"><%= item.max_days_per_year === null ? 'Không giới hạn' : formatNumber(item.max_days_per_year, 1) %></td>
+                <td>
+                  <% if (Number(item.requires_approval)) { %><span class="badge badge-status warning">Cần duyệt</span><% } else { %><span class="badge badge-status info">Tự động</span><% } %>
+                </td>
+                <td>
+                  <% if (Number(item.is_active)) { %><span class="badge badge-status success">Đang áp dụng</span><% } else { %><span class="badge badge-status secondary">Ngưng áp dụng</span><% } %>
+                </td>
+                <td class="numeric"><%= item.request_count %> / <%= item.balance_count %></td>
+                <td class="action-col">
+                  <a class="btn btn-sm btn-outline-secondary" href="/leave-types/<%= item.id %>/edit" aria-label="Sửa loại phép <%= item.name %>">
+                    <i data-lucide="pencil" class="icon icon-xs" aria-hidden="true"></i> Sửa
+                  </a>
+                  <form method="post" action="/leave-types/<%= item.id %>" class="d-inline">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="_method" value="delete">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            data-confirm="Bạn có chắc muốn xóa loại phép <%= item.name %>?"
+                            data-confirm-title="Xác nhận xóa loại phép"
+                            data-confirm-danger>
+                      <i data-lucide="trash-2" class="icon icon-xs" aria-hidden="true"></i> Xóa
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="8" class="text-center text-muted py-4">Chưa có loại phép nào. Nhấn "Thêm loại phép" để bắt đầu.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

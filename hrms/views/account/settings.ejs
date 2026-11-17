@@ -1,0 +1,69 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    var found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1>Cài đặt tài khoản</h1>
+    <p>Quản lý thông tin đăng nhập và bảo mật tài khoản.</p>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header"><h2>Đổi mật khẩu</h2></div>
+      <div class="card-body">
+        <form action="/account/change-password" method="post" novalidate>
+          <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+
+          <div class="form-field">
+            <label for="oldPassword">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+            <input type="password" class="form-control <%= errorFor('old_password') ? 'is-invalid' : '' %>"
+                   id="oldPassword" name="old_password" autocomplete="current-password" required>
+            <% if (errorFor('old_password')) { %><div class="invalid-feedback"><%= errorFor('old_password') %></div><% } %>
+          </div>
+
+          <div class="form-field">
+            <label for="newPassword">Mật khẩu mới <span class="text-danger">*</span></label>
+            <input type="password" class="form-control <%= errorFor('new_password') ? 'is-invalid' : '' %>"
+                   id="newPassword" name="new_password" autocomplete="new-password" minlength="6" required>
+            <% if (errorFor('new_password')) { %><div class="invalid-feedback"><%= errorFor('new_password') %></div><% } %>
+            <span class="form-hint">Tối thiểu 6 ký tự. Nên kết hợp chữ cái, số và ký tự đặc biệt.</span>
+          </div>
+
+          <div class="form-field">
+            <label for="confirmPassword">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+            <input type="password" class="form-control <%= errorFor('confirm_password') ? 'is-invalid' : '' %>"
+                   id="confirmPassword" name="confirm_password" autocomplete="new-password" minlength="6" required>
+            <% if (errorFor('confirm_password')) { %><div class="invalid-feedback"><%= errorFor('confirm_password') %></div><% } %>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> Lưu thay đổi
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header"><h2>Thông tin đăng nhập</h2></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-5">Tên đăng nhập</dt><dd class="col-sm-7"><%= user ? user.username : '—' %></dd>
+          <dt class="col-sm-5">Email</dt><dd class="col-sm-7"><%= user ? (user.email || '—') : '—' %></dd>
+          <dt class="col-sm-5">Vai trò</dt><dd class="col-sm-7"><%= user ? user.role : '—' %></dd>
+          <dt class="col-sm-5">Phòng ban</dt><dd class="col-sm-7"><%= user ? (user.department_name || '—') : '—' %></dd>
+        </dl>
+        <a class="btn btn-outline-secondary mt-3" href="/account/profile">
+          <i data-lucide="id-card" class="icon icon-sm" aria-hidden="true"></i> Xem hồ sơ cá nhân
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

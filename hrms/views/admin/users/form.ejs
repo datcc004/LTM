@@ -1,0 +1,104 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+  function selected(field, expected) {
+    return String(value(field)) === String(expected) ? 'selected' : '';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p>Tài khoản dùng để đăng nhập hệ thống. Để trống mật khẩu khi chỉnh sửa nếu không đổi mật khẩu.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-outline-secondary" href="/admin/users">
+      <i data-lucide="arrow-left" class="icon icon-sm" aria-hidden="true"></i> Danh sách tài khoản
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Thông tin tài khoản</h2></div>
+  <div class="card-body">
+    <form action="<%= item ? '/admin/users/' + item.id + '/update' : '/admin/users' %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="username">Tên đăng nhập <span class="text-danger">*</span></label>
+            <input type="text" class="form-control <%= errorFor('username') ? 'is-invalid' : '' %>"
+                   id="username" name="username" maxlength="50" required autocomplete="off"
+                   value="<%= value('username') %>" placeholder="nhanvien01">
+            <% if (errorFor('username')) { %><div class="invalid-feedback"><%= errorFor('username') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="email">Email <span class="text-danger">*</span></label>
+            <input type="email" class="form-control <%= errorFor('email') ? 'is-invalid' : '' %>"
+                   id="email" name="email" maxlength="120" required value="<%= value('email') %>" placeholder="nv01@kidspark.vn">
+            <% if (errorFor('email')) { %><div class="invalid-feedback"><%= errorFor('email') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="password">Mật khẩu <%= item ? '(để trống nếu không đổi)' : '<span class="text-danger">*</span>' %></label>
+            <input type="password" class="form-control <%= errorFor('password') ? 'is-invalid' : '' %>"
+                   id="password" name="password" maxlength="100" autocomplete="new-password" placeholder="Ít nhất 6 ký tự">
+            <% if (errorFor('password')) { %><div class="invalid-feedback"><%= errorFor('password') %></div><% } else { %><span class="form-hint">Tối thiểu 6 ký tự.</span><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="role_id">Vai trò <span class="text-danger">*</span></label>
+            <select class="form-select <%= errorFor('role_id') ? 'is-invalid' : '' %>" id="role_id" name="role_id" required>
+              <% roles.forEach(function (role) { %>
+                <option value="<%= role.id %>" <%= selected('role_id', role.id) %>><%= role.name %></option>
+              <% }); %>
+            </select>
+            <% if (errorFor('role_id')) { %><div class="invalid-feedback"><%= errorFor('role_id') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="employee_id">Liên kết nhân viên</label>
+            <select class="form-select" id="employee_id" name="employee_id">
+              <option value="">Không liên kết</option>
+              <% employees.forEach(function (emp) { %>
+                <option value="<%= emp.id %>" <%= selected('employee_id', emp.id) %>><%= emp.full_name %> — <%= emp.employee_code %><%= emp.department_name ? ' (' + emp.department_name + ')' : '' %></option>
+              <% }); %>
+              <% if (item && item.employee_id && !employees.some(function (emp) { return Number(emp.id) === Number(item.employee_id); })) { %>
+                <option value="<%= item.employee_id %>" selected><%= item.full_name || 'Nhân viên #' + item.employee_id %> — <%= item.employee_code || '' %> (hiện tại)</option>
+              <% } %>
+            </select>
+            <span class="form-hint">Chỉ liệt kê nhân viên đang làm việc, chưa có tài khoản.</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="is_active">Trạng thái</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
+                     <%= String(value('is_active')) === '1' || value('is_active') === true ? 'checked' : '' %>>
+              <label class="form-check-label" for="is_active">Tài khoản hoạt động</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Thêm tài khoản' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="/admin/users">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

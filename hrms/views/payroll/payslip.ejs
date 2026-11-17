@@ -1,0 +1,107 @@
+<%
+  const income = items.filter(function (row) { return row.item_type === 'Thu nhập'; });
+  const charges = items.filter(function (row) { return row.item_type !== 'Thu nhập'; });
+  function sum(rows) {
+    return rows.reduce(function (total, row) { return total + Number(row.amount || 0); }, 0);
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1>Phiếu lương <%= item.employee_code %> — <%= item.full_name %></h1>
+    <p>Kỳ <%= period ? period.period_code : '—' %><%= period ? ' · ' + formatDate(period.start_date) + ' – ' + formatDate(period.end_date) : '' %></p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-outline-secondary" href="/payroll/<%= item.period_id %>">
+      <i data-lucide="arrow-left" class="icon icon-sm" aria-hidden="true"></i> Về kỳ lương
+    </a>
+    <% if (item.status === 'Dự thảo') { %>
+      <a class="btn btn-primary" href="/payroll/payrolls/<%= item.id %>/edit">
+        <i data-lucide="pencil" class="icon icon-sm" aria-hidden="true"></i> Chỉnh phiếu
+      </a>
+    <% } %>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <span class="kpi-icon is-info"><i data-lucide="calendar-days" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Số ngày công</span>
+      <span class="kpi-value"><%= formatNumber(item.working_days, 2) %></span>
+      <span class="kpi-trend"><%= item.department_name || '—' %><%= item.position_name ? ' · ' + item.position_name : '' %></span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon"><i data-lucide="circle-dollar-sign" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Tổng thu nhập</span>
+      <span class="kpi-value kpi-value-money"><%= formatMoney(sum(income)) %></span>
+      <span class="kpi-trend">Gồm lương, phụ cấp, thưởng và tăng ca</span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-warning"><i data-lucide="minus-circle" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Khấu trừ + bảo hiểm + thuế</span>
+      <span class="kpi-value kpi-value-money"><%= formatMoney(sum(charges)) %></span>
+      <span class="kpi-trend">Bảo hiểm nhân viên đóng 10.5%</span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-success"><i data-lucide="wallet" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Thực lãnh</span>
+      <span class="kpi-value kpi-value-money"><%= formatMoney(item.net_salary) %></span>
+      <span class="kpi-trend"><%= item.status %></span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Chi tiết phiếu lương</h2></div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Các khoản mục lương</caption>
+        <thead>
+          <tr>
+            <th scope="col">Nhóm</th>
+            <th scope="col">Mã</th>
+            <th scope="col">Khoản mục</th>
+            <th scope="col" class="numeric">Số tiền</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% items.forEach(function (row) { %>
+            <tr>
+              <td><%= row.item_type %></td>
+              <td><strong><%= row.code %></strong></td>
+              <td><%= row.name %></td>
+              <td class="numeric"><%= formatMoney(row.amount) %></td>
+            </tr>
+          <% }); %>
+          <% if (!items.length) { %>
+            <tr><td colspan="4" class="text-center text-muted py-4">Phiếu này chưa có khoản mục chi tiết.</td></tr>
+          <% } %>
+        </tbody>
+        <tfoot>
+          <tr>
+            <th colspan="3" scope="row" class="text-end">Thu nhập tính thuế</th>
+            <td class="numeric"><%= formatMoney(item.taxable_income) %></td>
+          </tr>
+          <tr>
+            <th colspan="3" scope="row" class="text-end">Thuế TNCN</th>
+            <td class="numeric"><%= formatMoney(item.personal_income_tax) %></td>
+          </tr>
+          <tr>
+            <th colspan="3" scope="row" class="text-end">Thực lãnh</th>
+            <td class="numeric"><strong><%= formatMoney(item.net_salary) %></strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <% if (item.note) { %>
+      <p class="text-muted mb-0"><strong>Ghi chú:</strong> <%= item.note %></p>
+    <% } %>
+  </div>
+</div>

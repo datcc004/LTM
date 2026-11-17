@@ -1,0 +1,89 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p><%= item ? 'Cập nhật thông tin phòng ban.' : 'Thêm một phòng ban mới vào cơ cấu tổ chức.' %></p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Thông tin phòng ban</h2></div>
+  <div class="card-body">
+    <form action="<%= item ? '/departments/' + item.id : '/departments' %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (item) { %><input type="hidden" name="_method" value="put"><% } %>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="code">Mã phòng ban <span class="text-danger">*</span></label>
+            <input type="text" class="form-control <%= errorFor('code') ? 'is-invalid' : '' %>"
+                   id="code" name="code" maxlength="20" required
+                   value="<%= value('code') %>" aria-describedby="<%= errorFor('code') ? 'codeError' : 'codeHint' %>">
+            <% if (errorFor('code')) { %><div class="invalid-feedback" id="codeError"><%= errorFor('code') %></div><% } else { %><span class="form-hint" id="codeHint">Ví dụ: HR, IT, ACC. Không trùng với phòng ban khác.</span><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="name">Tên phòng ban <span class="text-danger">*</span></label>
+            <input type="text" class="form-control <%= errorFor('name') ? 'is-invalid' : '' %>"
+                   id="name" name="name" maxlength="100" required value="<%= value('name') %>"
+                   aria-describedby="<%= errorFor('name') ? 'nameError' : '' %>">
+            <% if (errorFor('name')) { %><div class="invalid-feedback" id="nameError"><%= errorFor('name') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="parent_id">Phòng ban cha</label>
+            <select class="form-select <%= errorFor('parent_id') ? 'is-invalid' : '' %>" id="parent_id" name="parent_id">
+              <option value="">— Không có —</option>
+              <% departments.forEach(function (option) { %>
+                <option value="<%= option.id %>" <%= String(value('parent_id')) === String(option.id) ? 'selected' : '' %>><%= option.name %></option>
+              <% }); %>
+            </select>
+            <% if (errorFor('parent_id')) { %><div class="invalid-feedback"><%= errorFor('parent_id') %></div><% } %>
+            <span class="form-hint">Để trống nếu đây là phòng ban cấp cao nhất.</span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="manager_id">Trưởng phòng</label>
+            <select class="form-select <%= errorFor('manager_id') ? 'is-invalid' : '' %>" id="manager_id" name="manager_id">
+              <option value="">— Chưa bổ nhiệm —</option>
+              <% managers.forEach(function (option) { %>
+                <option value="<%= option.id %>" <%= String(value('manager_id')) === String(option.id) ? 'selected' : '' %>><%= option.full_name %> (<%= option.employee_code %>)</option>
+              <% }); %>
+            </select>
+            <% if (errorFor('manager_id')) { %><div class="invalid-feedback"><%= errorFor('manager_id') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="is_active">Trạng thái</label>
+            <select class="form-select <%= errorFor('is_active') ? 'is-invalid' : '' %>" id="is_active" name="is_active">
+              <option value="1" <%= String(value('is_active')) === '1' ? 'selected' : '' %>>Đang hoạt động</option>
+              <option value="0" <%= String(value('is_active')) === '0' ? 'selected' : '' %>>Ngừng hoạt động</option>
+            </select>
+            <% if (errorFor('is_active')) { %><div class="invalid-feedback"><%= errorFor('is_active') %></div><% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Thêm phòng ban' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="/departments">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

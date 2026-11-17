@@ -1,0 +1,98 @@
+<div class="page-heading">
+  <div>
+    <h1>Phân ca làm việc</h1>
+    <p>Gán ca cho nhân viên theo ngày. Lịch ca được tạo sẽ sinh bản ghi công tương ứng.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/schedules/create">
+      <i data-lucide="plus" class="icon icon-sm" aria-hidden="true"></i> Thêm lịch ca
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/schedules" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterEmployee">Nhân viên</label>
+        <select class="form-select" id="filterEmployee" name="employee_id">
+          <option value="">Tất cả nhân viên</option>
+          <% employees.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.employee_id === String(option.id) ? 'selected' : '' %>><%= option.full_name %> (<%= option.employee_code %>)</option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterShift">Ca làm việc</label>
+        <select class="form-select" id="filterShift" name="shift_id">
+          <option value="">Tất cả ca</option>
+          <% shifts.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.shift_id === String(option.id) ? 'selected' : '' %>><%= option.name %> (<%= String(option.start_time).slice(0, 5) %>)</option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterFrom">Từ ngày</label>
+        <input type="date" class="form-control" id="filterFrom" name="from_date" value="<%= query.from_date %>">
+        <label class="visually-hidden" for="filterTo">Đến ngày</label>
+        <input type="date" class="form-control" id="filterTo" name="to_date" value="<%= query.to_date %>">
+        <label class="visually-hidden" for="filterKeyword">Tìm theo tên</label>
+        <input type="search" class="form-control" id="filterKeyword" name="q" placeholder="Tên hoặc mã nhân viên" value="<%= query.q %>">
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/schedules">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> lịch ca</span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách lịch phân ca</caption>
+        <thead>
+          <tr>
+            <th scope="col">Ngày</th>
+            <th scope="col">Nhân viên</th>
+            <th scope="col">Phòng ban</th>
+            <th scope="col">Ca làm việc</th>
+            <th scope="col">Thời gian</th>
+            <th scope="col">Ghi chú</th>
+            <th scope="col" class="action-col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (schedules.length) { %>
+            <% schedules.forEach(function (item) { %>
+              <tr>
+                <td><strong><%= formatDate(item.work_date, 'DD/MM/YYYY') %></strong></td>
+                <td><%= item.full_name %><br><small class="text-muted"><%= item.employee_code %></small></td>
+                <td><%= item.department_name || '—' %></td>
+                <td>
+                  <span class="d-inline-block rounded-circle me-2" style="width:9px;height:9px;background:<%= item.shift_color || '#64748b' %>"></span>
+                  <%= item.shift_name %>
+                </td>
+                <td><%= String(item.start_time).slice(0, 5) %> – <%= String(item.end_time).slice(0, 5) %></td>
+                <td><%= item.note || '—' %></td>
+                <td class="action-col">
+                  <a class="btn btn-sm btn-outline-secondary" href="/schedules/<%= item.id %>/edit" aria-label="Sửa lịch ca của <%= item.full_name %>">
+                    <i data-lucide="pencil" class="icon icon-xs" aria-hidden="true"></i> Sửa
+                  </a>
+                  <form method="post" action="/schedules/<%= item.id %>" class="d-inline">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="_method" value="delete">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            data-confirm="Bạn có chắc muốn xóa lịch ca của <%= item.full_name %> ngày <%= formatDate(item.work_date, 'DD/MM/YYYY') %>?"
+                            data-confirm-title="Xác nhận xóa lịch ca"
+                            data-confirm-danger>
+                      <i data-lucide="trash-2" class="icon icon-xs" aria-hidden="true"></i> Xóa
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="7" class="text-center text-muted py-4">Không có lịch phân ca nào phù hợp với bộ lọc.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

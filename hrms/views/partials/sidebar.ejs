@@ -1,0 +1,86 @@
+<%
+  const navMenu = (typeof menu !== 'undefined' && Array.isArray(menu)) ? menu : [];
+  const navActive = (typeof activeMenu !== 'undefined' && activeMenu) ? activeMenu : { group: '', item: '' };
+  const navBadges = (typeof badges !== 'undefined' && badges) ? badges : {};
+  const currentUser = (typeof user !== 'undefined' && user) ? user : {};
+  const appLabel = (typeof appName !== 'undefined' && appName) ? appName : 'KIDS PARK HRMS';
+  const initials = (currentUser.full_name || currentUser.username || '?')
+    .split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
+%>
+<aside class="app-sidebar" id="appSidebar" :class="{ 'is-collapsed': sidebarCollapsed, 'is-open': mobileNavOpen }" aria-label="Menu chính">
+  <div class="sidebar-brand">
+    <a class="brand-link" href="/dashboard" aria-label="<%= appLabel %> - Trang chủ">
+      <span class="brand-mark" aria-hidden="true"><i data-lucide="park" class="icon"></i></span>
+      <span class="brand-text">
+        <strong>KIDS PARK</strong>
+        <small>Hệ thống quản lý nhân sự</small>
+      </span>
+    </a>
+    <button type="button" class="sidebar-close btn-icon d-lg-none" @click="mobileNavOpen = false" aria-label="Đóng menu">
+      <i data-lucide="x" class="icon" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Điều hướng chính">
+    <% navMenu.forEach(function (item) { %>
+      <% if (item.children && item.children.length) { %>
+        <div class="nav-group" x-data="{ expanded: <%= navActive.group === item.id ? 'true' : 'false' %> }">
+          <button type="button" class="nav-link nav-group-toggle <%= navActive.group === item.id ? 'is-active' : '' %>"
+                  @click="expanded = !expanded" :aria-expanded="expanded.toString()"
+                  aria-controls="nav-group-<%= item.id %>" title="<%= item.label %>">
+            <i data-lucide="<%= item.icon %>" class="icon" aria-hidden="true"></i>
+            <span class="nav-label"><%= item.label %></span>
+            <% if (item.badgeKey && navBadges[item.badgeKey]) { %>
+              <span class="nav-badge" aria-label="<%= navBadges[item.badgeKey] %> công việc chờ xử lý"><%= navBadges[item.badgeKey] %></span>
+            <% } %>
+            <i data-lucide="chevron-down" class="icon icon-sm nav-chevron" :class="{ 'is-rotated': expanded }" aria-hidden="true"></i>
+          </button>
+          <div class="nav-children" id="nav-group-<%= item.id %>" x-show="expanded" x-collapse>
+            <% item.children.forEach(function (child) { %>
+              <a class="nav-link nav-child <%= navActive.item === child.id ? 'is-active' : '' %>"
+                 href="<%= child.path %>"
+                 <%= navActive.item === child.id ? 'aria-current="page"' : '' %>
+                 title="<%= child.label %>">
+                <i data-lucide="<%= child.icon || 'circle-dot' %>" class="icon" aria-hidden="true"></i>
+                <span class="nav-label"><%= child.label %></span>
+                <% if (child.badgeKey && navBadges[child.badgeKey]) { %>
+                  <span class="nav-badge" aria-label="<%= navBadges[child.badgeKey] %> chờ duyệt"><%= navBadges[child.badgeKey] %></span>
+                <% } %>
+              </a>
+            <% }); %>
+          </div>
+        </div>
+      <% } else if (item.path) { %>
+        <a class="nav-link <%= navActive.item === item.id ? 'is-active' : '' %>"
+           href="<%= item.path %>"
+           <%= navActive.item === item.id ? 'aria-current="page"' : '' %>
+           title="<%= item.label %>">
+          <i data-lucide="<%= item.icon %>" class="icon" aria-hidden="true"></i>
+          <span class="nav-label"><%= item.label %></span>
+          <% if (item.badgeKey && navBadges[item.badgeKey]) { %>
+            <span class="nav-badge" aria-label="<%= navBadges[item.badgeKey] %> chờ duyệt"><%= navBadges[item.badgeKey] %></span>
+          <% } %>
+        </a>
+      <% } %>
+    <% }); %>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a class="sidebar-user" href="/account/profile" title="Thông tin tài khoản">
+      <span class="avatar avatar-sm" aria-hidden="true">
+        <% if (currentUser.avatar_path) { %>
+          <img src="/uploads/<%= currentUser.avatar_path %>" alt="">
+        <% } else { %>
+          <%= initials %>
+        <% } %>
+      </span>
+      <span class="sidebar-user-info">
+        <strong><%= currentUser.full_name || currentUser.username || 'Người dùng' %></strong>
+        <small><%= currentUser.role || '—' %></small>
+      </span>
+      <i data-lucide="chevrons-up-down" class="icon icon-sm" aria-hidden="true"></i>
+    </a>
+  </div>
+</aside>
+
+<div class="sidebar-backdrop" @click="mobileNavOpen = false" aria-hidden="true"></div>

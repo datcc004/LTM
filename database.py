@@ -33,6 +33,29 @@ def add_employee(ma_nv, ho_ten, chuc_vu, khu_vuc, face_encoding=None, mat_khau='
     cursor.close()
     conn.close()
 
+def get_employees():
+    """Danh sách nhân viên cho màn hình quản lý (không kèm dữ liệu khuôn mặt)"""
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+    SELECT
+        id,
+        ma_nv AS 'Mã NV',
+        ho_ten AS 'Họ và Tên',
+        chuc_vu AS 'Chức vụ',
+        khu_vuc AS 'Khu vực',
+        vai_tro AS 'Vai trò',
+        (face_encoding IS NOT NULL) AS 'Khuôn mặt',
+        created_at AS 'Ngày tạo'
+    FROM nhan_vien
+    ORDER BY id ASC
+    """
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return rows
+
 def get_employee_face_status(nhan_vien_id):
     """Kiểm tra xem nhân viên đã có dữ liệu khuôn mặt chưa"""
     conn = get_connection()
@@ -78,18 +101,107 @@ def get_all_faces():
     conn.close()
     return known_encodings, known_info
 
-def record_attendance(nhan_vien_id, trang_thai='Dung_gio'):
-    """Ghi nhận log điểm danh"""
+def get_current_shift(nhan_vien_id=None, target_dt=None):
+    """Xác định ca làm việc hiện tại của nhân viên dựa theo lịch phân ca hoặc khung giờ thực tế"""
+    if target_dt is None:
+        target_dt = datetime.datetime.now()
+    cur_date = target_dt.date()
+    cur_time = target_dt.time()
+    
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT id, ten_ca, gio_bat_dau, gio_ket_thuc FROM ca_lam_viec ORDER BY gio_bat_dau ASC")
+    all_shifts = cur.fetchall()
+    
+    scheduled = []
+    if nhan_vien_id:
+        cur.execute("""
+            SELECT c.id, c.ten_ca, c.gio_bat_dau, c.gio_ket_thuc
+            FROM lich_phan_ca p
+            JOIN ca_lam_viec c ON p.ca_lam_id = c.id
+            WHERE p.nhan_vien_id = %s AND p.ngay_lam = %s
+            ORDER BY c.gio_bat_dau ASC
+        """, (nhan_vien_id, cur_date))
+        scheduled = cur.fetchall()
+        
+    cur.close()
+    conn.close()
+    
+    if scheduled:
+        if len(scheduled) == 1:
+            return scheduled[0]
+        # Nếu có từ 2 ca trong ngày (ví dụ AC, AT)
+        if cur_time < datetime.time(12, 30):
+            return scheduled[0]
+        else:
+            return scheduled[-1]
+            
+    # Mặc định theo các mốc giờ trong ngày nếu chưa phân ca
+    sang = next((s for s in all_shifts if 'Sang' in s['ten_ca'] or 'Sáng' in s['ten_ca']), all_shifts[0] if all_shifts else {'id': 1, 'ten_ca': 'Ca Sang'})
+    chieu = next((s for s in all_shifts if 'Chieu' in s['ten_ca'] or 'Chiều' in s['ten_ca']), all_shifts[1] if len(all_shifts) > 1 else sang)
+    toi = next((s for s in all_shifts if 'Toi' in s['ten_ca'] or 'Tối' in s['ten_ca']), all_shifts[2] if len(all_shifts) > 2 else sang)
+    
+    if cur_time < datetime.time(12, 30):
+        return sang
+    elif cur_time < datetime.time(17, 30):
+        return chieu
+    else:
+        return toi
+
+def check_shift_attendance(nhan_vien_id, ca_lam_id=None, target_date=None):
+    """Kiểm tra xem nhân viên đã điểm danh cho ca làm này trong ngày hay chưa"""
+    if target_date is None:
+        target_date = datetime.date.today()
+    if ca_lam_id is None:
+        shift = get_current_shift(nhan_vien_id)
+        ca_lam_id = shift['id']
+        
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+    SELECT d.id, d.thoi_gian_checkin, d.trang_thai, c.ten_ca
+    FROM diem_danh d
+    LEFT JOIN ca_lam_viec c ON d.ca_lam_id = c.id
+    WHERE d.nhan_vien_id = %s 
+      AND DATE(d.thoi_gian_checkin) = %s
+      AND d.ca_lam_id = %s
+    ORDER BY d.thoi_gian_checkin DESC
+    LIMIT 1
+    """
+    cursor.execute(query, (nhan_vien_id, target_date, ca_lam_id))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return row
+
+def check_recent_attendance(nhan_vien_id, cooldown_minutes=30):
+    """Kiểm tra lượt điểm danh gần nhất (hỗ trợ tương thích ngược)"""
+    return check_shift_attendance(nhan_vien_id)
+
+def record_attendance(nhan_vien_id, trang_thai='Dung_gio', ca_lam_id=None):
+    """Ghi nhận log điểm danh (mỗi ca làm việc chỉ có thể chụp 1 lần duy nhất trong ngày)"""
+    shift = get_current_shift(nhan_vien_id) if ca_lam_id is None else {'id': ca_lam_id, 'ten_ca': f'Ca {ca_lam_id}'}
+    active_ca_id = shift['id']
+    active_ca_name = shift.get('ten_ca', 'Ca làm')
+    
+    # 1. Kiểm tra xem ca làm này hôm nay đã điểm danh chưa
+    already_checked = check_shift_attendance(nhan_vien_id, active_ca_id)
+    if already_checked:
+        t_str = already_checked['thoi_gian_checkin'].strftime("%H:%M:%S")
+        ca_name = already_checked.get('ten_ca') or active_ca_name
+        return False, f"Bạn đã điểm danh {ca_name} hôm nay lúc {t_str}. Mỗi ca làm chỉ có thể chụp 1 lần!"
+
     conn = get_connection()
     cursor = conn.cursor()
     query = """
-    INSERT INTO diem_danh (nhan_vien_id, thoi_gian_checkin, trang_thai)
-    VALUES (%s, NOW(), %s)
+    INSERT INTO diem_danh (nhan_vien_id, ca_lam_id, thoi_gian_checkin, trang_thai)
+    VALUES (%s, %s, NOW(), %s)
     """
-    cursor.execute(query, (nhan_vien_id, trang_thai))
+    cursor.execute(query, (nhan_vien_id, active_ca_id, trang_thai))
     conn.commit()
     cursor.close()
     conn.close()
+    return True, f"Điểm danh {active_ca_name} thành công!"
 
 def get_attendance_history():
     """Lấy lịch sử điểm danh toàn hệ thống (Quản lý)"""
@@ -159,6 +271,37 @@ def get_employee_attendance(nhan_vien_id):
     cursor.close()
     conn.close()
     return rows
+
+def delete_employee(nhan_vien_id):
+    """Xóa nhân viên và dữ liệu liên quan (lich_phan_ca, diem_danh). Không cho phép xóa tài khoản quản lý (vai_tro='Quan_ly')."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    # Lấy vai trò của nhân viên trước khi xóa
+    cursor.execute("SELECT vai_tro FROM nhan_vien WHERE id = %s", (nhan_vien_id,))
+    row = cursor.fetchone()
+    if not row:
+        cursor.close()
+        conn.close()
+        return False, "Không tìm thấy nhân viên."
+    if row[0] == 'Quan_ly':
+        cursor.close()
+        conn.close()
+        return False, "Không thể xóa tài khoản quản lý."
+    try:
+        # 1. Xóa lịch phân ca liên quan
+        cursor.execute("DELETE FROM lich_phan_ca WHERE nhan_vien_id = %s", (nhan_vien_id,))
+        # 2. Xóa lịch sử điểm danh liên quan
+        cursor.execute("DELETE FROM diem_danh WHERE nhan_vien_id = %s", (nhan_vien_id,))
+        # 3. Xóa nhân viên
+        cursor.execute("DELETE FROM nhan_vien WHERE id = %s", (nhan_vien_id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True, f"Đã xóa nhân viên id={nhan_vien_id} và dữ liệu liên quan."
+    except Exception as e:
+        cursor.close()
+        conn.close()
+        return False, f"Lỗi khi xóa: {str(e)}"
 
 def get_weekly_schedule_matrix(start_date, nhan_vien_id=None):
     """Lấy ma trận phân ca từ Thứ 2 đến Chủ nhật dạng mã A, C, T, AC, AT, OFF"""

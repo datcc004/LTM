@@ -1,0 +1,101 @@
+<%
+  function remainingBadge(days) {
+    const value = Number(days || 0);
+    if (value <= 0) return 'danger';
+    if (value <= 2) return 'warning';
+    return 'success';
+  }
+  function usedPercent(row) {
+    const total = Number(row.opening_days || 0) + Number(row.accrued_days || 0);
+    if (!total) return 0;
+    return Math.min(100, Math.round(Number(row.used_days || 0) / total * 100));
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1>Quỹ phép</h1>
+    <p>Theo dõi số ngày phép đầu năm, đã sử dụng và số dư còn lại của từng nhân viên.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-outline-secondary" href="/leave-requests">
+      <i data-lucide="arrow-left" class="icon icon-sm" aria-hidden="true"></i> Danh sách đơn
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/leave-requests/balances" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterQ">Tìm kiếm</label>
+        <input type="search" class="form-control" id="filterQ" name="q" value="<%= query.q %>" placeholder="Tên hoặc mã nhân viên">
+        <label class="visually-hidden" for="filterEmployee">Nhân viên</label>
+        <select class="form-select" id="filterEmployee" name="employee_id">
+          <option value="">Tất cả nhân viên</option>
+          <% employees.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.employee_id === String(option.id) ? 'selected' : '' %>><%= option.full_name %> (<%= option.employee_code %>)</option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterDepartment">Phòng ban</label>
+        <select class="form-select" id="filterDepartment" name="department_id">
+          <option value="">Tất cả phòng ban</option>
+          <% departments.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.department_id === String(option.id) ? 'selected' : '' %>><%= option.name %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterYear">Năm</label>
+        <input type="number" class="form-control" id="filterYear" name="year" min="2000" max="2100" value="<%= query.year %>">
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/leave-requests/balances">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> quỹ phép · Năm <%= query.year %></span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Quỹ phép của nhân viên năm <%= query.year %></caption>
+        <thead>
+          <tr>
+            <th scope="col">Nhân viên</th>
+            <th scope="col">Phòng ban</th>
+            <th scope="col">Loại phép</th>
+            <th scope="col" class="numeric">Đầu năm</th>
+            <th scope="col" class="numeric">Tăng thêm</th>
+            <th scope="col" class="numeric">Đã dùng</th>
+            <th scope="col" class="numeric">Còn lại</th>
+            <th scope="col">Mức sử dụng</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (records.length) { %>
+            <% records.forEach(function (row) { %>
+              <tr>
+                <td>
+                  <strong><%= row.full_name %></strong>
+                  <br><small class="text-muted"><%= row.employee_code %></small>
+                </td>
+                <td><%= row.department_name || '—' %></td>
+                <td><span class="badge badge-status info"><%= row.leave_type_name %></span></td>
+                <td class="numeric"><%= formatNumber(row.opening_days, 1) %></td>
+                <td class="numeric"><%= formatNumber(row.accrued_days, 1) %></td>
+                <td class="numeric"><%= formatNumber(row.used_days, 1) %></td>
+                <td class="numeric"><span class="badge badge-status <%= remainingBadge(row.remaining_days) %>"><%= formatNumber(row.remaining_days, 1) %></span></td>
+                <td>
+                  <div class="progress" style="height: 8px;" role="progressbar" aria-label="Mức sử dụng quỹ phép" aria-valuenow="<%= usedPercent(row) %>" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar" style="width: <%= usedPercent(row) %>%"></div>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="8" class="text-center text-muted py-4">Không có quỹ phép nào phù hợp với bộ lọc.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

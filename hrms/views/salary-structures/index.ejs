@@ -1,0 +1,89 @@
+<div class="page-heading">
+  <div>
+    <h1>Cấu trúc lương</h1>
+    <p>Lương cơ bản, phụ cấp và số người phụ thuộc dùng để tính lương. Mỗi nhân viên chỉ có một cấu trúc lương.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/salary-structures/create">
+      <i data-lucide="plus" class="icon icon-sm" aria-hidden="true"></i> Thêm cấu trúc lương
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/salary-structures" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterQ">Tìm kiếm</label>
+        <input type="search" class="form-control" id="filterQ" name="q" value="<%= query.q %>" placeholder="Mã hoặc tên nhân viên">
+        <label class="visually-hidden" for="filterDepartment">Phòng ban</label>
+        <select class="form-select" id="filterDepartment" name="department_id">
+          <option value="">Tất cả phòng ban</option>
+          <% departments.forEach(function (department) { %>
+            <option value="<%= department.id %>" <%= query.department_id === String(department.id) ? 'selected' : '' %>><%= department.name %></option>
+          <% }); %>
+        </select>
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/salary-structures">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> bản ghi</span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách cấu trúc lương</caption>
+        <thead>
+          <tr>
+            <th scope="col">Mã NV</th>
+            <th scope="col">Nhân viên</th>
+            <th scope="col">Phòng ban</th>
+            <th scope="col" class="numeric">Lương cơ bản</th>
+            <th scope="col" class="numeric">Phụ cấp</th>
+            <th scope="col" class="numeric">Phụ thuộc</th>
+            <th scope="col">Hiệu lực</th>
+            <th scope="col" class="action-col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (records.length) { %>
+            <% records.forEach(function (item) { %>
+              <tr>
+                <td><strong><%= item.employee_code %></strong></td>
+                <td>
+                  <%= item.full_name %>
+                  <% if (item.employee_status === 'Nghỉ việc') { %><span class="badge badge-status secondary">Nghỉ việc</span><% } %>
+                </td>
+                <td><%= item.department_name || '—' %></td>
+                <td class="numeric"><%= formatMoney(item.base_salary) %></td>
+                <td class="numeric"><%= formatMoney(item.allowance) %></td>
+                <td class="numeric"><%= formatNumber(item.dependents_count) %></td>
+                <td><%= formatDate(item.effective_from) %></td>
+                <td class="action-col">
+                  <a class="btn btn-sm btn-outline-secondary" href="/salary-structures/<%= item.id %>/edit" aria-label="Sửa cấu trúc lương của <%= item.full_name %>">
+                    <i data-lucide="pencil" class="icon icon-xs" aria-hidden="true"></i> Sửa
+                  </a>
+                  <form method="post" action="/salary-structures/<%= item.id %>" class="d-inline">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="_method" value="delete">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            data-confirm="Bạn có chắc muốn xóa cấu trúc lương của <%= item.full_name %>?"
+                            data-confirm-title="Xác nhận xóa"
+                            data-confirm-danger>
+                      <i data-lucide="trash-2" class="icon icon-xs" aria-hidden="true"></i> Xóa
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="8" class="text-center text-muted py-4">Chưa có cấu trúc lương nào.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

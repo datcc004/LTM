@@ -1,0 +1,201 @@
+<%
+  const typeLabels = {
+    attendance: 'Chấm công',
+    leave: 'Nghỉ phép',
+    payroll: 'Tiền lương',
+  };
+  const filterQuery = new URLSearchParams({
+    type: query.type,
+    month: query.month,
+    year: query.year,
+    department_id: query.department_id,
+  }).toString();
+%>
+<div class="page-heading">
+  <div>
+    <h1>Báo cáo</h1>
+    <p>Tổng hợp dữ liệu nhân sự theo kỳ. Phạm vi dữ liệu tuân theo quyền của bạn.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-outline-primary" href="/reports/export/excel?<%= filterQuery %>">
+      <i data-lucide="file-spreadsheet" class="icon icon-sm" aria-hidden="true"></i> Xuất Excel
+    </a>
+    <a class="btn btn-outline-danger" href="/reports/export/pdf?<%= filterQuery %>">
+      <i data-lucide="file-text" class="icon icon-sm" aria-hidden="true"></i> Xuất PDF
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/reports" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterType">Loại báo cáo</label>
+        <select class="form-select" id="filterType" name="type">
+          <% Object.keys(typeLabels).forEach(function (key) { %>
+            <option value="<%= key %>" <%= query.type === key ? 'selected' : '' %>><%= typeLabels[key] %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterMonth">Tháng</label>
+        <select class="form-select" id="filterMonth" name="month">
+          <option value="">Tháng hiện tại</option>
+          <% for (var m = 1; m <= 12; m += 1) { %>
+            <option value="<%= m %>" <%= String(query.month) === String(m) || (!query.month && period.month === m) ? 'selected' : '' %>><%= m %></option>
+          <% } %>
+        </select>
+        <label class="visually-hidden" for="filterYear">Năm</label>
+        <input type="number" class="form-control" id="filterYear" name="year" value="<%= query.year || period.year %>" min="2000" max="2100">
+        <label class="visually-hidden" for="filterDepartment">Phòng ban</label>
+        <select class="form-select" id="filterDepartment" name="department_id">
+          <option value="">Tất cả phòng ban</option>
+          <% departments.forEach(function (dept) { %>
+            <option value="<%= dept.id %>" <%= String(query.department_id) === String(dept.id) ? 'selected' : '' %>><%= dept.name %></option>
+          <% }); %>
+        </select>
+        <button class="btn btn-primary" type="submit">Xem báo cáo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="kpi-grid mt-3">
+  <div class="kpi-card">
+    <span class="kpi-icon is-info"><i data-lucide="calendar-check" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Bản ghi chấm công</span>
+      <span class="kpi-value"><%= summary.attendance.total %></span>
+      <span class="kpi-trend">Tỷ lệ đúng giờ <%= summary.attendance.on_time_rate %>%</span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-success"><i data-lucide="circle-check" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Đúng giờ</span>
+      <span class="kpi-value"><%= summary.attendance['Đúng giờ'] %></span>
+      <span class="kpi-trend">Trên tổng số bản ghi</span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-warning"><i data-lucide="calendar-minus" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Đơn nghỉ phép</span>
+      <span class="kpi-value"><%= summary.totalLeave %></span>
+      <span class="kpi-trend">Trong kỳ <%= period.label %></span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-success"><i data-lucide="wallet" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Quỹ lương đã chốt</span>
+      <span class="kpi-value kpi-value-money"><%= formatMoney(summary.netSalary) %></span>
+      <span class="kpi-trend"><%= summary.totalPayroll %> phiếu lương</span>
+    </div>
+  </div>
+</div>
+
+<div
+  id="reportRoot"
+  data-endpoint="/reports/data?<%= filterQuery %>"
+  data-status-labels='<%= JSON.stringify(charts.statusChart.labels) %>'
+  data-status-values='<%= JSON.stringify(charts.statusChart.values) %>'
+  data-attendance-trend='<%= JSON.stringify(charts.attendanceChart) %>'
+  data-leave-labels='<%= JSON.stringify(charts.leaveChart.labels) %>'
+  data-leave-values='<%= JSON.stringify(charts.leaveChart.values) %>'
+  data-payroll-labels='<%= JSON.stringify(charts.payrollChart.labels) %>'
+  data-payroll-values='<%= JSON.stringify(charts.payrollChart.values) %>'
+></div>
+
+<div class="row g-3 mt-1">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h2>Phân bố trạng thái công</h2></div>
+      <div class="card-body chart-box"><canvas id="reportStatusChart" aria-label="Biểu đồ trạng thái chấm công"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h2>Xu hướng chấm công</h2></div>
+      <div class="card-body chart-box"><canvas id="reportAttendanceChart" aria-label="Biểu đồ xu hướng chấm công"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h2>Nghỉ phép theo loại</h2></div>
+      <div class="card-body chart-box"><canvas id="reportLeaveChart" aria-label="Biểu đồ nghỉ phép theo loại"></canvas></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h2>Quỹ lương theo phòng ban</h2></div>
+      <div class="card-body chart-box"><canvas id="reportPayrollChart" aria-label="Biểu đồ quỹ lương theo phòng ban"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header"><h2>Dữ liệu chi tiết — <%= titleText %></h2></div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <% if (query.type === 'attendance') { %>
+        <table class="table align-middle">
+          <caption class="visually-hidden">Chi tiết chấm công</caption>
+          <thead><tr><th>Ngày</th><th>Nhân viên</th><th>Phòng ban</th><th>Trạng thái</th><th class="numeric">Giờ công</th></tr></thead>
+          <tbody>
+            <% details.attendanceDetails.slice(0, 50).forEach(function (row) { %>
+              <tr>
+                <td><%= formatDate(row.work_date) %></td>
+                <td><%= row.full_name %></td>
+                <td><%= row.department_name || '—' %></td>
+                <td><%= row.status %></td>
+                <td class="numeric"><%= formatNumber((row.worked_minutes || 0) / 60, 2) %></td>
+              </tr>
+            <% }); %>
+            <% if (!details.attendanceDetails.length) { %>
+              <tr><td colspan="5" class="text-center text-muted py-4">Không có dữ liệu chấm công trong kỳ này.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      <% } else if (query.type === 'leave') { %>
+        <table class="table align-middle">
+          <caption class="visually-hidden">Chi tiết nghỉ phép</caption>
+          <thead><tr><th>Nhân viên</th><th>Loại phép</th><th>Từ ngày</th><th>Đến ngày</th><th class="numeric">Số ngày</th><th>Trạng thái</th></tr></thead>
+          <tbody>
+            <% details.leaveDetails.slice(0, 50).forEach(function (row) { %>
+              <tr>
+                <td><%= row.full_name %></td>
+                <td><%= row.leave_type_name %></td>
+                <td><%= formatDate(row.start_date) %></td>
+                <td><%= formatDate(row.end_date) %></td>
+                <td class="numeric"><%= formatNumber(row.days_requested, 2) %></td>
+                <td><%= row.status %></td>
+              </tr>
+            <% }); %>
+            <% if (!details.leaveDetails.length) { %>
+              <tr><td colspan="6" class="text-center text-muted py-4">Không có đơn nghỉ nào trong kỳ này.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <table class="table align-middle">
+          <caption class="visually-hidden">Chi tiết tiền lương</caption>
+          <thead><tr><th>Mã NV</th><th>Nhân viên</th><th>Phòng ban</th><th>Kỳ</th><th class="numeric">Thực lãnh</th></tr></thead>
+          <tbody>
+            <% details.payrollDetails.slice(0, 50).forEach(function (row) { %>
+              <tr>
+                <td><%= row.employee_code %></td>
+                <td><%= row.full_name %></td>
+                <td><%= row.department_name || '—' %></td>
+                <td><%= row.period_code %></td>
+                <td class="numeric"><%= formatMoney(row.net_salary) %></td>
+              </tr>
+            <% }); %>
+            <% if (!details.payrollDetails.length) { %>
+              <tr><td colspan="5" class="text-center text-muted py-4">Không có phiếu lương đã chốt trong kỳ này.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+    <p class="text-muted small mb-0">Hiển thị tối đa 50 dòng. Xuất Excel hoặc PDF để xem toàn bộ dữ liệu.</p>
+  </div>
+</div>

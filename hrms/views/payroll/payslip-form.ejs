@@ -1,0 +1,91 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (entry) { return entry.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p>Chỉnh lương, thưởng và khấu trừ. Bảo hiểm, thuế và thực lãnh được tính lại tự động.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Nhân viên: <%= item.employee_code %> — <%= item.full_name %></h2></div>
+  <div class="card-body">
+    <form action="/payroll/payrolls/<%= item.id %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="_method" value="put">
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="base_salary">Lương cơ bản <span class="text-danger">*</span></label>
+            <input type="number" class="form-control <%= errorFor('base_salary') ? 'is-invalid' : '' %>"
+                   id="base_salary" name="base_salary" min="0" step="1000" required value="<%= value('base_salary') %>">
+            <% if (errorFor('base_salary')) { %><div class="invalid-feedback"><%= errorFor('base_salary') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="allowance">Phụ cấp <span class="text-danger">*</span></label>
+            <input type="number" class="form-control <%= errorFor('allowance') ? 'is-invalid' : '' %>"
+                   id="allowance" name="allowance" min="0" step="1000" required value="<%= value('allowance') %>">
+            <% if (errorFor('allowance')) { %><div class="invalid-feedback"><%= errorFor('allowance') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="working_days">Số ngày công <span class="text-danger">*</span></label>
+            <input type="number" class="form-control <%= errorFor('working_days') ? 'is-invalid' : '' %>"
+                   id="working_days" name="working_days" min="0.01" max="31" step="0.25" required value="<%= value('working_days') %>">
+            <% if (errorFor('working_days')) { %><div class="invalid-feedback"><%= errorFor('working_days') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="bonus">Thưởng <span class="text-danger">*</span></label>
+            <input type="number" class="form-control <%= errorFor('bonus') ? 'is-invalid' : '' %>"
+                   id="bonus" name="bonus" min="0" step="1000" required value="<%= value('bonus') %>">
+            <% if (errorFor('bonus')) { %><div class="invalid-feedback"><%= errorFor('bonus') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="deduction">Khấu trừ khác <span class="text-danger">*</span></label>
+            <input type="number" class="form-control <%= errorFor('deduction') ? 'is-invalid' : '' %>"
+                   id="deduction" name="deduction" min="0" step="1000" required value="<%= value('deduction') %>">
+            <% if (errorFor('deduction')) { %><div class="invalid-feedback"><%= errorFor('deduction') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="form-field">
+            <label for="note">Ghi chú</label>
+            <input type="text" class="form-control <%= errorFor('note') ? 'is-invalid' : '' %>"
+                   id="note" name="note" maxlength="500" value="<%= value('note') %>" placeholder="Ghi chú phiếu lương">
+            <% if (errorFor('note')) { %><div class="invalid-feedback"><%= errorFor('note') %></div><% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-light mt-3 mb-0">
+        Tiền tăng ca hiện tại: <strong><%= formatMoney(item.overtime_pay) %></strong>.
+        Bảo hiểm: <strong><%= formatMoney(item.insurance_amount) %></strong>.
+        Thuế TNCN: <strong><%= formatMoney(item.personal_income_tax) %></strong>.
+        Thực lãnh: <strong><%= formatMoney(item.net_salary) %></strong>.
+      </div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> Lưu thay đổi
+        </button>
+        <a class="btn btn-outline-secondary" href="/payroll/payrolls/<%= item.id %>">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

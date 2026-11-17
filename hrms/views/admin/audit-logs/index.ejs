@@ -1,0 +1,90 @@
+<%
+  function actionClass(action) {
+    const value = String(action || '').toUpperCase();
+    if (['DELETE', 'REJECT', 'LOCK'].includes(value)) return 'danger';
+    if (['CREATE', 'INSERT', 'UNLOCK', 'APPROVE'].includes(value)) return 'success';
+    if (['UPDATE', 'CHANGE_PASSWORD'].includes(value)) return 'warning';
+    return 'info';
+  }
+  function preview(value) {
+    if (value === null || value === undefined || value === '') return '—';
+    const text = typeof value === 'string' ? value : JSON.stringify(value);
+    return text.length > 160 ? text.slice(0, 160) + '…' : text;
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1>Nhật ký thao tác</h1>
+    <p>Lịch sử thao tác trên hệ thống. Dữ liệu nhạy cảm đã được che trước khi lưu.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/admin/audit-logs" role="search">
+      <div class="table-filter flex-wrap">
+        <label class="visually-hidden" for="filterQ">Tìm kiếm</label>
+        <input type="search" class="form-control" id="filterQ" name="q" value="<%= query.q %>" placeholder="Người dùng, bảng hoặc mã bản ghi">
+        <label class="visually-hidden" for="filterAction">Thao tác</label>
+        <select class="form-select" id="filterAction" name="action">
+          <option value="">Mọi thao tác</option>
+          <% actions.forEach(function (item) { %>
+            <option value="<%= item %>" <%= query.action === item ? 'selected' : '' %>><%= item %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterTable">Bảng</label>
+        <select class="form-select" id="filterTable" name="table_name">
+          <option value="">Mọi bảng</option>
+          <% tables.forEach(function (item) { %>
+            <option value="<%= item %>" <%= query.table_name === item ? 'selected' : '' %>><%= item %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterFrom">Từ ngày</label>
+        <input type="date" class="form-control" id="filterFrom" name="from_date" value="<%= query.from_date %>">
+        <label class="visually-hidden" for="filterTo">Đến ngày</label>
+        <input type="date" class="form-control" id="filterTo" name="to_date" value="<%= query.to_date %>">
+        <button class="btn btn-primary" type="submit">Lọc</button>
+        <a class="btn btn-outline-secondary" href="/admin/audit-logs">Xóa lọc</a>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle table-sm">
+        <caption class="visually-hidden">Danh sách nhật ký thao tác</caption>
+        <thead>
+          <tr>
+            <th scope="col">Thời gian</th>
+            <th scope="col">Người dùng</th>
+            <th scope="col">Thao tác</th>
+            <th scope="col">Bảng / Bản ghi</th>
+            <th scope="col">Thay đổi</th>
+            <th scope="col">IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% logs.forEach(function (row) { %>
+            <tr>
+              <td><%= formatDateTime(row.created_at) %></td>
+              <td><%= row.username || (row.user_id ? '#' + row.user_id : 'Hệ thống') %></td>
+              <td><span class="badge badge-status <%= actionClass(row.action) %>"><%= row.action %></span></td>
+              <td>
+                <strong><%= row.table_name %></strong>
+                <span class="d-block text-muted small"><%= row.record_id || '—' %></span>
+              </td>
+              <td>
+                <div class="small"><span class="text-muted">Cũ:</span> <%= preview(row.old_value) %></div>
+                <div class="small"><span class="text-muted">Mới:</span> <%= preview(row.new_value) %></div>
+              </td>
+              <td class="small"><%= row.ip_address || '—' %></td>
+            </tr>
+          <% }); %>
+          <% if (!logs.length) { %>
+            <tr><td colspan="6" class="text-center text-muted py-4">Không có nhật ký nào phù hợp.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../../partials/pagination', { pagination: pagination, basePath: basePath, filterQuery: filterQuery }) %>
+  </div>
+</div>

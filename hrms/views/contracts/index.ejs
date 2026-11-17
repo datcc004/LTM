@@ -1,0 +1,125 @@
+<%
+  function contractClass(status) {
+    if (status === 'Còn hạn') return 'success';
+    if (status === 'Sắp hết hạn') return 'warning';
+    if (status === 'Hết hạn') return 'danger';
+    return 'info';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1>Hợp đồng lao động</h1>
+    <p>Quản lý hợp đồng, thời hạn và tài liệu đính kèm của nhân viên.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/contracts/create">
+      <i data-lucide="plus" class="icon icon-sm" aria-hidden="true"></i> Thêm hợp đồng
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/contracts" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterQ">Tìm hợp đồng</label>
+        <input type="search" class="form-control" id="filterQ" name="q" placeholder="Số hợp đồng, tên hoặc mã NV" value="<%= query.q %>">
+        <label class="visually-hidden" for="filterEmployee">Nhân viên</label>
+        <select class="form-select" id="filterEmployee" name="employee_id">
+          <option value="">Tất cả nhân viên</option>
+          <% employees.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.employee_id === String(option.id) ? 'selected' : '' %>><%= option.full_name %> (<%= option.employee_code %>)</option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterType">Loại hợp đồng</label>
+        <select class="form-select" id="filterType" name="contract_type">
+          <option value="">Tất cả loại</option>
+          <% contractTypes.forEach(function (option) { %>
+            <option value="<%= option %>" <%= query.contract_type === option ? 'selected' : '' %>><%= option %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterStatus">Trạng thái</label>
+        <select class="form-select" id="filterStatus" name="status">
+          <option value="">Tất cả trạng thái</option>
+          <% contractStatuses.forEach(function (option) { %>
+            <option value="<%= option %>" <%= query.status === option ? 'selected' : '' %>><%= option %></option>
+          <% }); %>
+        </select>
+        <div class="form-check align-self-center">
+          <input class="form-check-input" type="checkbox" id="filterExpiring" name="expiring" value="1" <%= query.expiring === '1' ? 'checked' : '' %>>
+          <label class="form-check-label small" for="filterExpiring">Sắp hết hạn 30 ngày</label>
+        </div>
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/contracts">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> hợp đồng</span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách hợp đồng lao động</caption>
+        <thead>
+          <tr>
+            <th scope="col">Số hợp đồng</th>
+            <th scope="col">Nhân viên</th>
+            <th scope="col">Phòng ban</th>
+            <th scope="col">Loại</th>
+            <th scope="col">Thời hạn</th>
+            <th scope="col" class="numeric">Lương cơ bản</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col" class="action-col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (contracts.length) { %>
+            <% contracts.forEach(function (item) { %>
+              <tr>
+                <td>
+                  <strong><%= item.contract_no %></strong>
+                  <% if (item.document_path) { %>
+                    <br><a class="small" href="<%= item.document_path %>" target="_blank" rel="noopener noreferrer">Xem tài liệu</a>
+                  <% } %>
+                </td>
+                <td>
+                  <a class="text-decoration-none fw-semibold" href="/employees/<%= item.employee_id %>"><%= item.full_name %></a>
+                  <br><small class="text-muted"><%= item.employee_code %></small>
+                </td>
+                <td><%= item.department_name || '—' %></td>
+                <td><%= item.contract_type %></td>
+                <td class="small"><%= item.start_date %> &ndash; <%= item.end_date %></td>
+                <td class="numeric"><%= item.salary %></td>
+                <td>
+                  <span class="badge badge-status <%= contractClass(item.status) %>"><%= item.status %></span>
+                  <% if (item.days_left !== null && item.days_left >= 0 && item.days_left <= 30 && item.status !== 'Đã hủy') { %>
+                    <br><small class="text-muted">Còn <%= item.days_left %> ngày</small>
+                  <% } %>
+                </td>
+                <td class="action-col">
+                  <a class="btn btn-sm btn-outline-secondary" href="/contracts/<%= item.id %>/edit" aria-label="Sửa hợp đồng <%= item.contract_no %>">
+                    <i data-lucide="pencil" class="icon icon-xs" aria-hidden="true"></i> Sửa
+                  </a>
+                  <form method="post" action="/contracts/<%= item.id %>" class="d-inline">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="_method" value="delete">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            data-confirm="Bạn có chắc muốn xóa hợp đồng <%= item.contract_no %>? Tài liệu đính kèm cũng sẽ bị xóa."
+                            data-confirm-title="Xác nhận xóa hợp đồng"
+                            data-confirm-danger>
+                      <i data-lucide="trash-2" class="icon icon-xs" aria-hidden="true"></i> Xóa
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="8" class="text-center text-muted py-4">Không có hợp đồng nào phù hợp với bộ lọc.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

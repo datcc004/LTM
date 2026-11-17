@@ -1,0 +1,12 @@
+<div class="error-page">
+  <div class="error-card">
+    <div class="error-illustration" aria-hidden="true"><i data-lucide="lock-keyhole" class="icon"></i></div>
+    <p class="error-code">403</p>
+    <h1>Không có quyền truy cập</h1>
+    <p class="error-message"><%= message || 'Bạn không có quyền thực hiện thao tác này.' %></p>
+    <div class="error-actions">
+      <a href="/dashboard" class="btn btn-primary"><i data-lucide="layout-dashboard" class="icon icon-sm" aria-hidden="true"></i> Về trang chủ</a>
+      <a href="javascript:history.back()" class="btn btn-outline-secondary"><i data-lucide="arrow-left" class="icon icon-sm" aria-hidden="true"></i> Quay lại</a>
+    </div>
+  </div>
+</div>

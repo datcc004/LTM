@@ -1,0 +1,45 @@
+<%
+  const pg = (typeof pagination !== 'undefined' && pagination) ? pagination : {};
+  const page = Math.max(1, Number(pg.page || 1));
+  const totalPages = Math.max(1, Number(pg.totalPages || 1));
+  const total = Number(pg.total || 0);
+  const limit = Math.max(1, Number(pg.limit || 20));
+  const base = (typeof basePath !== 'undefined' && basePath) ? basePath : '';
+  const filter = (typeof filterQuery !== 'undefined' && filterQuery) ? filterQuery : '';
+  const separator = filter ? '&' : '';
+  function pageHref(number) { return `${base}?${filter}${separator}page=${number}`; }
+  const start = total ? (page - 1) * limit + 1 : 0;
+  const end = Math.min(total, page * limit);
+  const from = Math.max(1, page - 2);
+  const to = Math.min(totalPages, from + 4);
+  const pages = [];
+  for (let i = from; i <= to; i += 1) pages.push(i);
+%>
+<% if (total > 0) { %>
+  <div class="pagination-wrap">
+    <span class="pagination-info">Hiển thị <%= start %>–<%= end %> / <%= total %> bản ghi</span>
+    <nav aria-label="Phân trang kết quả">
+      <ul class="pagination pagination-sm">
+        <% if (page <= 1) { %>
+          <li class="page-item disabled"><span class="page-link" aria-disabled="true"><i data-lucide="chevron-left" class="icon icon-xs" aria-hidden="true"></i></span></li>
+        <% } else { %>
+          <li class="page-item"><a class="page-link" href="<%= pageHref(page - 1) %>" aria-label="Trang trước"><i data-lucide="chevron-left" class="icon icon-xs" aria-hidden="true"></i></a></li>
+        <% } %>
+
+        <% pages.forEach(function (number) { %>
+          <% if (number === page) { %>
+            <li class="page-item active"><span class="page-link" aria-current="page"><%= number %></span></li>
+          <% } else { %>
+            <li class="page-item"><a class="page-link" href="<%= pageHref(number) %>" aria-label="Trang <%= number %>"><%= number %></a></li>
+          <% } %>
+        <% }); %>
+
+        <% if (page >= totalPages) { %>
+          <li class="page-item disabled"><span class="page-link" aria-disabled="true"><i data-lucide="chevron-right" class="icon icon-xs" aria-hidden="true"></i></span></li>
+        <% } else { %>
+          <li class="page-item"><a class="page-link" href="<%= pageHref(page + 1) %>" aria-label="Trang sau"><i data-lucide="chevron-right" class="icon icon-xs" aria-hidden="true"></i></a></li>
+        <% } %>
+      </ul>
+    </nav>
+  </div>
+<% } %>

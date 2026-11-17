@@ -1,0 +1,129 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+  function clock(field) { return String(value(field) || '').slice(0, 5); }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p><%= item ? 'Cập nhật cấu hình ca làm việc.' : 'Thêm một ca làm việc mới.' %></p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Thông tin ca làm việc</h2></div>
+  <div class="card-body">
+    <form action="<%= item ? '/shifts/' + item.id : '/shifts' %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (item) { %><input type="hidden" name="_method" value="put"><% } %>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="code">Mã ca <span class="text-danger">*</span></label>
+            <input type="text" class="form-control <%= errorFor('code') ? 'is-invalid' : '' %>"
+                   id="code" name="code" maxlength="20" required value="<%= value('code') %>">
+            <% if (errorFor('code')) { %><div class="invalid-feedback"><%= errorFor('code') %></div><% } else { %><span class="form-hint">Ví dụ: CA_SANG, CA_TOI.</span><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="name">Tên ca <span class="text-danger">*</span></label>
+            <input type="text" class="form-control <%= errorFor('name') ? 'is-invalid' : '' %>"
+                   id="name" name="name" maxlength="100" required value="<%= value('name') %>">
+            <% if (errorFor('name')) { %><div class="invalid-feedback"><%= errorFor('name') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="start_time">Giờ bắt đầu <span class="text-danger">*</span></label>
+            <input type="time" class="form-control <%= errorFor('start_time') ? 'is-invalid' : '' %>"
+                   id="start_time" name="start_time" required value="<%= clock('start_time') %>">
+            <% if (errorFor('start_time')) { %><div class="invalid-feedback"><%= errorFor('start_time') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="end_time">Giờ kết thúc <span class="text-danger">*</span></label>
+            <input type="time" class="form-control <%= errorFor('end_time') ? 'is-invalid' : '' %>"
+                   id="end_time" name="end_time" required value="<%= clock('end_time') %>">
+            <% if (errorFor('end_time')) { %><div class="invalid-feedback"><%= errorFor('end_time') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="break_minutes">Nghỉ (phút)</label>
+            <input type="number" class="form-control <%= errorFor('break_minutes') ? 'is-invalid' : '' %>"
+                   id="break_minutes" name="break_minutes" min="0" max="480" value="<%= value('break_minutes') %>">
+            <% if (errorFor('break_minutes')) { %><div class="invalid-feedback"><%= errorFor('break_minutes') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="work_hours">Số giờ công</label>
+            <input type="number" class="form-control <%= errorFor('work_hours') ? 'is-invalid' : '' %>"
+                   id="work_hours" name="work_hours" min="1" max="24" step="0.25" value="<%= value('work_hours') %>">
+            <% if (errorFor('work_hours')) { %><div class="invalid-feedback"><%= errorFor('work_hours') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="late_tolerance_minutes">Chấp nhận trễ (phút)</label>
+            <input type="number" class="form-control <%= errorFor('late_tolerance_minutes') ? 'is-invalid' : '' %>"
+                   id="late_tolerance_minutes" name="late_tolerance_minutes" min="0" max="240" value="<%= value('late_tolerance_minutes') %>">
+            <% if (errorFor('late_tolerance_minutes')) { %><div class="invalid-feedback"><%= errorFor('late_tolerance_minutes') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="early_tolerance_minutes">Chấp nhận sớm (phút)</label>
+            <input type="number" class="form-control <%= errorFor('early_tolerance_minutes') ? 'is-invalid' : '' %>"
+                   id="early_tolerance_minutes" name="early_tolerance_minutes" min="0" max="240" value="<%= value('early_tolerance_minutes') %>">
+            <% if (errorFor('early_tolerance_minutes')) { %><div class="invalid-feedback"><%= errorFor('early_tolerance_minutes') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="is_overnight">Ca qua đêm</label>
+            <select class="form-select <%= errorFor('is_overnight') ? 'is-invalid' : '' %>" id="is_overnight" name="is_overnight">
+              <option value="0" <%= String(value('is_overnight')) === '0' ? 'selected' : '' %>>Không</option>
+              <option value="1" <%= String(value('is_overnight')) === '1' ? 'selected' : '' %>>Có (giờ kết thúc sang ngày hôm sau)</option>
+            </select>
+            <% if (errorFor('is_overnight')) { %><div class="invalid-feedback"><%= errorFor('is_overnight') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="color">Màu hiển thị</label>
+            <input type="color" class="form-control form-control-color <%= errorFor('color') ? 'is-invalid' : '' %>"
+                   id="color" name="color" value="<%= value('color') || '#2563eb' %>">
+            <% if (errorFor('color')) { %><div class="invalid-feedback"><%= errorFor('color') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="is_active">Trạng thái</label>
+            <select class="form-select <%= errorFor('is_active') ? 'is-invalid' : '' %>" id="is_active" name="is_active">
+              <option value="1" <%= String(value('is_active')) === '1' ? 'selected' : '' %>>Đang hoạt động</option>
+              <option value="0" <%= String(value('is_active')) === '0' ? 'selected' : '' %>>Ngừng hoạt động</option>
+            </select>
+            <% if (errorFor('is_active')) { %><div class="invalid-feedback"><%= errorFor('is_active') %></div><% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Thêm ca làm việc' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="/shifts">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

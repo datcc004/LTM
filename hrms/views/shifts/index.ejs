@@ -1,0 +1,95 @@
+<div class="page-heading">
+  <div>
+    <h1>Ca làm việc</h1>
+    <p>Thiết lập giờ làm, thời gian nghỉ và ngưỡng đi trễ/về sớm cho từng ca.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/shifts/create">
+      <i data-lucide="plus" class="icon icon-sm" aria-hidden="true"></i> Thêm ca làm việc
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/shifts" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterShift">Tìm ca làm việc</label>
+        <input type="search" class="form-control" id="filterShift" name="q" placeholder="Mã hoặc tên ca" value="<%= query.q %>">
+        <label class="visually-hidden" for="filterActive">Trạng thái</label>
+        <select class="form-select" id="filterActive" name="is_active">
+          <option value="">Tất cả trạng thái</option>
+          <option value="1" <%= query.is_active === '1' ? 'selected' : '' %>>Đang hoạt động</option>
+          <option value="0" <%= query.is_active === '0' ? 'selected' : '' %>>Ngừng hoạt động</option>
+        </select>
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/shifts">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> ca làm việc</span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách ca làm việc</caption>
+        <thead>
+          <tr>
+            <th scope="col">Mã</th>
+            <th scope="col">Tên ca</th>
+            <th scope="col">Thời gian</th>
+            <th scope="col" class="numeric">Công</th>
+            <th scope="col" class="numeric">Nghỉ</th>
+            <th scope="col">Chấp nhận</th>
+            <th scope="col" class="numeric">Lịch ca</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col" class="action-col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (shifts.length) { %>
+            <% shifts.forEach(function (item) { %>
+              <tr>
+                <td><strong><%= item.code %></strong></td>
+                <td>
+                  <span class="d-inline-block rounded-circle me-2" style="width:9px;height:9px;background:<%= item.color || '#64748b' %>"></span>
+                  <%= item.name %>
+                  <% if (item.is_overnight) { %><span class="badge badge-status info ms-1">Qua đêm</span><% } %>
+                </td>
+                <td><%= String(item.start_time).slice(0, 5) %> – <%= String(item.end_time).slice(0, 5) %></td>
+                <td class="numeric"><%= Number(item.work_hours).toFixed(2) %> giờ</td>
+                <td class="numeric"><%= item.break_minutes %> phút</td>
+                <td>Trễ <%= item.late_tolerance_minutes %>' / Sớm <%= item.early_tolerance_minutes %>'</td>
+                <td class="numeric"><%= formatNumber(item.schedule_count) %></td>
+                <td>
+                  <span class="badge badge-status <%= item.is_active ? 'success' : 'info' %>">
+                    <%= item.is_active ? 'Đang hoạt động' : 'Ngừng hoạt động' %>
+                  </span>
+                </td>
+                <td class="action-col">
+                  <a class="btn btn-sm btn-outline-secondary" href="/shifts/<%= item.id %>/edit" aria-label="Sửa ca <%= item.name %>">
+                    <i data-lucide="pencil" class="icon icon-xs" aria-hidden="true"></i> Sửa
+                  </a>
+                  <form method="post" action="/shifts/<%= item.id %>" class="d-inline">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="_method" value="delete">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            data-confirm="Bạn có chắc muốn xóa ca <%= item.name %>? Ca chỉ xóa được khi không còn lịch phân ca hoặc bản ghi công."
+                            data-confirm-title="Xác nhận xóa ca làm việc"
+                            data-confirm-danger>
+                      <i data-lucide="trash-2" class="icon icon-xs" aria-hidden="true"></i> Xóa
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="9" class="text-center text-muted py-4">Không có ca làm việc nào phù hợp với bộ lọc.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

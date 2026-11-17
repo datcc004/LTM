@@ -1,0 +1,136 @@
+<%
+  function statusClass(status) {
+    if (status === 'Đang làm việc') return 'success';
+    if (status === 'Tạm nghỉ') return 'warning';
+    return 'danger';
+  }
+  function initials(name) {
+    return String(name || '').trim().split(/\s+/).slice(-2)
+      .map(function (word) { return word.charAt(0); }).join('').toUpperCase();
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1>Danh sách nhân viên</h1>
+    <p>Quản lý hồ sơ nhân sự, mã nhân viên và trạng thái làm việc.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/employees/create">
+      <i data-lucide="user-plus" class="icon icon-sm" aria-hidden="true"></i> Thêm nhân viên
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/employees" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterQ">Tìm nhân viên</label>
+        <input type="search" class="form-control" id="filterQ" name="q" placeholder="Mã, tên, điện thoại hoặc email" value="<%= query.q %>">
+        <label class="visually-hidden" for="filterDepartment">Phòng ban</label>
+        <select class="form-select" id="filterDepartment" name="department_id">
+          <option value="">Tất cả phòng ban</option>
+          <% departments.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.department_id === String(option.id) ? 'selected' : '' %>><%= option.name %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterPosition">Chức vụ</label>
+        <select class="form-select" id="filterPosition" name="position_id">
+          <option value="">Tất cả chức vụ</option>
+          <% positions.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.position_id === String(option.id) ? 'selected' : '' %>><%= option.name %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterStatus">Trạng thái</label>
+        <select class="form-select" id="filterStatus" name="status">
+          <option value="">Tất cả trạng thái</option>
+          <option value="Đang làm việc" <%= query.status === 'Đang làm việc' ? 'selected' : '' %>>Đang làm việc</option>
+          <option value="Tạm nghỉ" <%= query.status === 'Tạm nghỉ' ? 'selected' : '' %>>Tạm nghỉ</option>
+          <option value="Nghỉ việc" <%= query.status === 'Nghỉ việc' ? 'selected' : '' %>>Nghỉ việc</option>
+        </select>
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/employees">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> nhân viên</span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách hồ sơ nhân viên</caption>
+        <thead>
+          <tr>
+            <th scope="col">Nhân viên</th>
+            <th scope="col">Mã NV</th>
+            <th scope="col">Phòng ban</th>
+            <th scope="col">Chức vụ</th>
+            <th scope="col">Điện thoại</th>
+            <th scope="col">Ngày vào làm</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col" class="action-col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (employees.length) { %>
+            <% employees.forEach(function (item) { %>
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar avatar-sm" aria-hidden="true">
+                      <% if (item.avatar_path) { %><img src="<%= item.avatar_path %>" alt=""><% } else { %><%= initials(item.full_name) %><% } %>
+                    </span>
+                    <div>
+                      <a class="fw-semibold text-decoration-none" href="/employees/<%= item.id %>"><%= item.full_name %></a>
+                      <br><small class="text-muted"><%= item.email || 'Chưa có email' %></small>
+                    </div>
+                  </div>
+                </td>
+                <td><strong><%= item.employee_code %></strong></td>
+                <td><%= item.department_name || '—' %></td>
+                <td><%= item.position_name || '—' %></td>
+                <td><%= item.phone || '—' %></td>
+                <td class="small"><%= formatDate(item.hire_date) %></td>
+                <td><span class="badge badge-status <%= statusClass(item.status) %>"><%= item.status %></span></td>
+                <td class="action-col">
+                  <a class="btn btn-sm btn-outline-secondary" href="/employees/<%= item.id %>" aria-label="Xem hồ sơ <%= item.full_name %>">
+                    <i data-lucide="eye" class="icon icon-xs" aria-hidden="true"></i> Xem
+                  </a>
+                  <a class="btn btn-sm btn-outline-secondary" href="/employees/<%= item.id %>/edit" aria-label="Sửa hồ sơ <%= item.full_name %>">
+                    <i data-lucide="pencil" class="icon icon-xs" aria-hidden="true"></i> Sửa
+                  </a>
+                  <% if (item.status === 'Nghỉ việc') { %>
+                    <form method="post" action="/employees/<%= item.id %>/restore" class="d-inline">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="_method" value="patch">
+                      <button type="submit" class="btn btn-sm btn-outline-success"
+                              data-confirm="Khôi phục nhân viên <%= item.full_name %> về trạng thái Đang làm việc?"
+                              data-confirm-title="Khôi phục nhân viên">
+                        <i data-lucide="rotate-ccw" class="icon icon-xs" aria-hidden="true"></i> Khôi phục
+                      </button>
+                    </form>
+                  <% } else { %>
+                    <form method="post" action="/employees/<%= item.id %>" class="d-inline">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="_method" value="delete">
+                      <button type="submit" class="btn btn-sm btn-outline-danger"
+                              data-confirm="Chuyển nhân viên <%= item.full_name %> sang trạng thái Nghỉ việc? Dữ liệu chấm công và lương vẫn được giữ lại."
+                              data-confirm-title="Xác nhận xóa hồ sơ"
+                              data-confirm-danger>
+                        <i data-lucide="trash-2" class="icon icon-xs" aria-hidden="true"></i> Xóa
+                      </button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="8" class="text-center text-muted py-4">Không có nhân viên nào phù hợp với bộ lọc.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

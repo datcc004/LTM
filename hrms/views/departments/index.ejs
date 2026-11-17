@@ -1,0 +1,87 @@
+<div class="page-heading">
+  <div>
+    <h1>Phòng ban</h1>
+    <p>Quản lý cơ cấu tổ chức, trưởng phòng và trạng thái hoạt động.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/departments/create">
+      <i data-lucide="plus" class="icon icon-sm" aria-hidden="true"></i> Thêm phòng ban
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/departments" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterCode">Tìm phòng ban</label>
+        <input type="search" class="form-control" id="filterCode" name="q" placeholder="Mã hoặc tên phòng ban" value="<%= query.q %>">
+        <label class="visually-hidden" for="filterActive">Trạng thái</label>
+        <select class="form-select" id="filterActive" name="is_active">
+          <option value="">Tất cả trạng thái</option>
+          <option value="1" <%= query.is_active === '1' ? 'selected' : '' %>>Đang hoạt động</option>
+          <option value="0" <%= query.is_active === '0' ? 'selected' : '' %>>Ngừng hoạt động</option>
+        </select>
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/departments">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> phòng ban</span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách phòng ban trong tổ chức</caption>
+        <thead>
+          <tr>
+            <th scope="col">Mã</th>
+            <th scope="col">Tên phòng ban</th>
+            <th scope="col">Phòng cha</th>
+            <th scope="col">Trưởng phòng</th>
+            <th scope="col" class="numeric">Nhân viên</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col" class="action-col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (departments.length) { %>
+            <% departments.forEach(function (item) { %>
+              <tr>
+                <td><strong><%= item.code %></strong></td>
+                <td><%= item.name %></td>
+                <td><%= item.parent_name || '—' %></td>
+                <td><%= item.manager_name || 'Chưa bổ nhiệm' %></td>
+                <td class="numeric"><%= formatNumber(item.employee_count) %></td>
+                <td>
+                  <span class="badge badge-status <%= item.is_active ? 'success' : 'info' %>">
+                    <%= item.is_active ? 'Đang hoạt động' : 'Ngừng hoạt động' %>
+                  </span>
+                </td>
+                <td class="action-col">
+                  <a class="btn btn-sm btn-outline-secondary" href="/departments/<%= item.id %>/edit" aria-label="Sửa phòng ban <%= item.name %>">
+                    <i data-lucide="pencil" class="icon icon-xs" aria-hidden="true"></i> Sửa
+                  </a>
+                  <form method="post" action="/departments/<%= item.id %>" class="d-inline">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="_method" value="delete">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            data-confirm="Bạn có chắc muốn xóa phòng ban <%= item.name %>? Phòng ban chỉ xóa được khi không còn nhân viên, chức vụ hoặc phòng ban con."
+                            data-confirm-title="Xác nhận xóa phòng ban"
+                            data-confirm-danger>
+                      <i data-lucide="trash-2" class="icon icon-xs" aria-hidden="true"></i> Xóa
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="7" class="text-center text-muted py-4">Không có phòng ban nào phù hợp với bộ lọc.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

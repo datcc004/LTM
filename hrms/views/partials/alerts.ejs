@@ -1,0 +1,28 @@
+<%
+  const flashData = (typeof flash !== 'undefined' && flash) ? flash : {};
+  const formErrors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  const toastTypes = ['success', 'error', 'warning', 'info'];
+%>
+
+<% toastTypes.forEach(function (type) { %>
+  <% (flashData[type] || []).forEach(function (message) { %>
+    <div class="flash-source" hidden data-toast="<%= type %>" data-toast-message="<%= message %>"></div>
+  <% }); %>
+<% }); %>
+
+<% if (formErrors.length) { %>
+  <div class="alert alert-danger alert-dismissible validation-alert" role="alert">
+    <div class="d-flex gap-2 align-items-start">
+      <i data-lucide="circle-alert" class="icon icon-sm flex-shrink-0 mt-1" aria-hidden="true"></i>
+      <div class="flex-grow-1">
+        <strong>Vui lòng kiểm tra lại dữ liệu:</strong>
+        <ul class="validation-list mb-0">
+          <% formErrors.forEach(function (error) { %>
+            <li><%= error.message %></li>
+          <% }); %>
+        </ul>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+  </div>
+<% } %>

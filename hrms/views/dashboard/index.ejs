@@ -1,0 +1,155 @@
+<%
+  const data = dashboard || {};
+  const stats = data.stats || {};
+
+  function statusClass(status) {
+    var value = String(status || '');
+    if (value === 'Đã duyệt' || value === 'Đúng giờ' || value === 'Đã chốt') return 'success';
+    if (value === 'Chờ duyệt' || value === 'Đi trễ' || value === 'Về sớm' || value === 'Dự thảo') return 'warning';
+    if (value === 'Từ chối' || value === 'Thiếu giờ' || value === 'Vắng mặt' || value === 'Đã hủy') return 'danger';
+    return 'info';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1>Tổng quan</h1>
+    <p>Chào mừng <%= user ? (user.full_name || user.username) : 'bạn' %> trở lại. Đây là tình hình nhân sự hôm nay.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-outline-secondary" href="/notifications">
+      <i data-lucide="bell" class="icon icon-sm" aria-hidden="true"></i> Thông báo
+    </a>
+    <% if (['ADMIN', 'HR'].indexOf(user ? user.role : '') !== -1) { %>
+      <a class="btn btn-primary" href="/employees/create">
+        <i data-lucide="user-plus" class="icon icon-sm" aria-hidden="true"></i> Thêm nhân viên
+      </a>
+    <% } %>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <span class="kpi-icon"><i data-lucide="users-round" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Nhân viên đang làm việc</span>
+      <span class="kpi-value"><%= formatNumber(stats.activeEmployees || 0) %></span>
+      <span class="kpi-trend">Tổng hồ sơ: <%= formatNumber(stats.totalEmployees || 0) %></span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-success"><i data-lucide="circle-check-big" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Chấm công hôm nay</span>
+      <span class="kpi-value"><%= stats.todayRate || 0 %>%</span>
+      <span class="kpi-trend <%= stats.todayIssues ? 'down' : 'up' %>">
+        <%= formatNumber(stats.todayOnTime || 0) %>/<%= formatNumber(stats.todayRecords || 0) %> đúng giờ
+      </span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-warning"><i data-lucide="calendar-days" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Đơn nghỉ chờ duyệt</span>
+      <span class="kpi-value"><%= formatNumber(stats.pendingLeaves || 0) %></span>
+      <span class="kpi-trend">Tăng ca chờ duyệt: <%= formatNumber(stats.pendingOvertimes || 0) %></span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-icon is-info"><i data-lucide="wallet" aria-hidden="true"></i></span>
+    <div class="kpi-body">
+      <span class="kpi-label">Quỹ lương kỳ gần nhất</span>
+      <span class="kpi-value kpi-value-money"><%= formatMoney(stats.payrollTotal || 0) %></span>
+      <span class="kpi-trend">Nhân viên mới 30 ngày: <%= formatNumber(stats.newEmployees || 0) %></span>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h2>Phân bổ nhân sự</h2>
+        <i data-lucide="chart-pie" class="icon icon-sm text-muted" aria-hidden="true"></i>
+      </div>
+      <div class="card-body">
+        <div class="chart-box"><canvas id="departmentChart" aria-label="Biểu đồ phân bổ nhân sự theo phòng ban" role="img"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h2>Xu hướng chấm công 7 ngày</h2>
+        <span class="text-muted small">Theo trạng thái</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-box"><canvas id="attendanceChart" aria-label="Biểu đồ chấm công 7 ngày gần nhất" role="img"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h2>Đơn nghỉ gần đây</h2>
+        <a class="small" href="/leave-requests">Xem tất cả</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr><th>Nhân viên</th><th>Loại phép</th><th>Thời gian</th><th>Số ngày</th><th>Trạng thái</th></tr>
+            </thead>
+            <tbody>
+              <% if ((data.recentLeaves || []).length) { %>
+                <% data.recentLeaves.forEach(function (item) { %>
+                  <tr>
+                    <td><strong><%= item.full_name %></strong><br><small class="text-muted"><%= item.employee_code %></small></td>
+                    <td><%= item.leave_type %></td>
+                    <td class="small"><%= item.start_date %> &ndash; <%= item.end_date %></td>
+                    <td class="numeric"><%= item.total_days %></td>
+                    <td><span class="badge badge-status <%= statusClass(item.status) %>"><%= item.status %></span></td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr><td colspan="5" class="text-center text-muted py-4">Chưa có đơn nghỉ phép nào.</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h2>Hợp đồng sắp hết hạn</h2>
+        <a class="small" href="/contracts">Xem tất cả</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead><tr><th>Nhân viên</th><th>Số hợp đồng</th><th>Hết hạn</th><th>Còn</th></tr></thead>
+            <tbody>
+              <% if ((data.expiringContracts || []).length) { %>
+                <% data.expiringContracts.forEach(function (item) { %>
+                  <tr>
+                    <td><strong><%= item.full_name %></strong><br><small class="text-muted"><%= item.employee_code %></small></td>
+                    <td class="small"><%= item.contract_no %></td>
+                    <td class="small"><%= item.end_date %></td>
+                    <td><span class="badge badge-status <%= item.days_left <= 7 ? 'danger' : 'warning' %>"><%= item.days_left %> ngày</span></td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr><td colspan="4" class="text-center text-muted py-4">Không có hợp đồng nào hết hạn trong 30 ngày tới.</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

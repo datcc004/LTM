@@ -1,0 +1,102 @@
+<%
+  const flashData = (typeof flash !== 'undefined' && flash) ? flash : {};
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  const old = (typeof oldInput !== 'undefined' && oldInput) ? oldInput : {};
+  const nextUrl = (typeof next !== 'undefined' && next) ? next : '/dashboard';
+  const noticeText = (typeof notice !== 'undefined') ? notice : '';
+
+  function errorFor(field) {
+    const found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+%>
+<div class="auth-shell">
+  <section class="auth-brand-panel" aria-label="Giới thiệu hệ thống">
+    <div class="auth-brand-inner">
+      <div class="auth-logo">
+        <span class="auth-logo-mark"><i data-lucide="park" class="icon" aria-hidden="true"></i></span>
+        <span><strong>KIDS PARK</strong><small>Hệ thống quản lý nhân sự</small></span>
+      </div>
+
+      <div class="auth-pitch">
+        <h1>Quản lý nhân sự<br>gọn gàng, chính xác.</h1>
+        <p>Một nơi duy nhất cho hồ sơ nhân viên, chấm công, đơn từ, hợp đồng và tiền lương.</p>
+      </div>
+
+      <ul class="auth-feature-list">
+        <li><i data-lucide="users-round" class="icon icon-sm" aria-hidden="true"></i><span>Hồ sơ &amp; hợp đồng nhân viên</span></li>
+        <li><i data-lucide="calendar-check-2" class="icon icon-sm" aria-hidden="true"></i><span>Chấm công, ca kíp &amp; tăng ca</span></li>
+        <li><i data-lucide="wallet" class="icon icon-sm" aria-hidden="true"></i><span>Bảng lương &amp; báo cáo</span></li>
+        <li><i data-lucide="shield-check" class="icon icon-sm" aria-hidden="true"></i><span>Phân quyền theo vai trò</span></li>
+      </ul>
+    </div>
+    <p class="auth-brand-footer">&copy; <%= new Date().getFullYear() %> KIDS PARK. Dùng cho mục đích nội bộ.</p>
+  </section>
+
+  <section class="auth-form-panel" aria-label="Đăng nhập">
+    <div class="auth-form-wrap">
+      <div class="auth-form-heading">
+        <h2>Đăng nhập</h2>
+        <p>Truy cập hệ thống bằng tài khoản nhân viên của bạn.</p>
+      </div>
+
+      <% if (noticeText) { %>
+        <div class="alert alert-info auth-alert" role="status">
+          <i data-lucide="info" class="icon icon-sm" aria-hidden="true"></i><span><%= noticeText %></span>
+        </div>
+      <% } %>
+
+      <% (flashData.error || []).forEach(function (message) { %>
+        <div class="alert alert-danger auth-alert" role="alert">
+          <i data-lucide="circle-alert" class="icon icon-sm" aria-hidden="true"></i><span><%= message %></span>
+        </div>
+      <% }); %>
+
+      <% if (errors.length) { %>
+        <div class="alert alert-danger auth-alert" role="alert">
+          <div>
+            <strong>Vui lòng kiểm tra lại:</strong>
+            <ul class="validation-list mb-0">
+              <% errors.forEach(function (item) { %><li><%= item.message %></li><% }); %>
+            </ul>
+          </div>
+        </div>
+      <% } %>
+
+      <form action="/login" method="post" novalidate class="auth-form">
+        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+        <input type="hidden" name="next" value="<%= nextUrl %>">
+
+        <div class="form-field">
+          <label for="username">Tên đăng nhập hoặc email</label>
+          <div class="auth-input-wrap">
+            <i data-lucide="user" class="icon icon-sm" aria-hidden="true"></i>
+            <input type="text" class="form-control <%= errorFor('username') ? 'is-invalid' : '' %>"
+                   id="username" name="username" value="<%= old.username || '' %>"
+                   autocomplete="username" placeholder="VD: admin" required autofocus>
+          </div>
+          <% if (errorFor('username')) { %><div class="invalid-feedback"><%= errorFor('username') %></div><% } %>
+        </div>
+
+        <div class="form-field">
+          <label for="password">Mật khẩu</label>
+          <div class="auth-input-wrap">
+            <i data-lucide="lock-keyhole" class="icon icon-sm" aria-hidden="true"></i>
+            <input type="password" class="form-control <%= errorFor('password') ? 'is-invalid' : '' %>"
+                   id="password" name="password" autocomplete="current-password" placeholder="Nhập mật khẩu" required>
+          </div>
+          <% if (errorFor('password')) { %><div class="invalid-feedback"><%= errorFor('password') %></div><% } %>
+        </div>
+
+        <button type="submit" class="btn btn-primary auth-submit">
+          <i data-lucide="log-in" class="icon icon-sm" aria-hidden="true"></i> Đăng nhập
+        </button>
+      </form>
+
+      <div class="auth-demo-note">
+        <i data-lucide="info" class="icon icon-sm" aria-hidden="true"></i>
+        <span>Tài khoản dùng thử: <strong>admin</strong>, <strong>hr</strong>, <strong>manager</strong>, <strong>employee</strong> — mật khẩu <strong>123456</strong>.</span>
+      </div>
+    </div>
+  </section>
+</div>

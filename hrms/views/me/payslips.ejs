@@ -1,0 +1,51 @@
+<div class="page-heading">
+  <div>
+    <h1>Phiếu lương của tôi</h1>
+    <p>Chỉ các phiếu lương đã chốt của bạn mới được hiển thị tại cổng nhân viên.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách phiếu lương đã chốt</caption>
+        <thead>
+          <tr>
+            <th scope="col">Kỳ lương</th>
+            <th scope="col" class="numeric">Lương cơ bản</th>
+            <th scope="col" class="numeric">Phụ cấp</th>
+            <th scope="col" class="numeric">Thưởng</th>
+            <th scope="col" class="numeric">Làm thêm</th>
+            <th scope="col" class="numeric">Khấu trừ</th>
+            <th scope="col" class="numeric">Thực lãnh</th>
+            <th scope="col">Chi tiết</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(function (row) { %>
+            <tr>
+              <td><strong><%= row.period_code %></strong></td>
+              <td class="numeric"><%= formatMoney(row.base_salary) %></td>
+              <td class="numeric"><%= formatMoney(row.allowance) %></td>
+              <td class="numeric"><%= formatMoney(row.bonus) %></td>
+              <td class="numeric"><%= formatMoney(row.overtime_pay) %></td>
+              <td class="numeric"><%= formatMoney(row.deduction) %></td>
+              <td class="numeric"><strong><%= formatMoney(row.net_salary) %></strong></td>
+              <td>
+                <a class="btn btn-sm btn-outline-primary" href="/me/payslips/<%= row.id %>">
+                  <i data-lucide="eye" class="icon icon-sm" aria-hidden="true"></i> Xem
+                </a>
+              </td>
+            </tr>
+          <% }); %>
+          <% if (!rows.length) { %>
+            <tr><td colspan="8" class="text-center text-muted py-4">Chưa có phiếu lương nào được chốt.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination', { pagination: pagination, basePath: basePath, filterQuery: filterQuery }) %>
+  </div>
+</div>

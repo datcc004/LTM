@@ -1,0 +1,114 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p><%= item ? 'Cập nhật giờ chấm công; trạng thái và các chỉ số sẽ được tính lại.' : 'Nhập giờ vào/ra; hệ thống tự tính công, trễ/sớm và làm thêm giờ.' %></p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Thông tin chấm công</h2></div>
+  <div class="card-body">
+    <form action="<%= item ? '/attendance/' + item.id : '/attendance' %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (item) { %><input type="hidden" name="_method" value="put"><% } %>
+      <% if (item && item.schedule_id) { %><input type="hidden" name="schedule_id" value="<%= item.schedule_id %>"><% } %>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="employee_id">Nhân viên <span class="text-danger">*</span></label>
+            <select class="form-select <%= errorFor('employee_id') ? 'is-invalid' : '' %>" id="employee_id" name="employee_id" required>
+              <option value="">— Chọn nhân viên —</option>
+              <% employees.forEach(function (option) { %>
+                <option value="<%= option.id %>" <%= String(value('employee_id')) === String(option.id) ? 'selected' : '' %>><%= option.full_name %> (<%= option.employee_code %>)</option>
+              <% }); %>
+            </select>
+            <% if (errorFor('employee_id')) { %><div class="invalid-feedback"><%= errorFor('employee_id') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="work_date">Ngày chấm công <span class="text-danger">*</span></label>
+            <input type="date" class="form-control <%= errorFor('work_date') ? 'is-invalid' : '' %>"
+                   id="work_date" name="work_date" required value="<%= value('work_date') %>">
+            <% if (errorFor('work_date')) { %><div class="invalid-feedback"><%= errorFor('work_date') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-field">
+            <label for="shift_id">Ca làm việc</label>
+            <select class="form-select <%= errorFor('shift_id') ? 'is-invalid' : '' %>" id="shift_id" name="shift_id">
+              <option value="">— Tự động từ lịch ca —</option>
+              <% shifts.forEach(function (option) { %>
+                <option value="<%= option.id %>" <%= String(value('shift_id')) === String(option.id) ? 'selected' : '' %>><%= option.name %> (<%= String(option.start_time).slice(0, 5) %> – <%= String(option.end_time).slice(0, 5) %>)</option>
+              <% }); %>
+            </select>
+            <% if (errorFor('shift_id')) { %><div class="invalid-feedback"><%= errorFor('shift_id') %></div><% } else { %><span class="form-hint">Để trống nếu đã có lịch phân ca trong ngày.</span><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="check_in">Giờ vào</label>
+            <input type="datetime-local" class="form-control <%= errorFor('check_in') ? 'is-invalid' : '' %>"
+                   id="check_in" name="check_in" value="<%= value('check_in') %>">
+            <% if (errorFor('check_in')) { %><div class="invalid-feedback"><%= errorFor('check_in') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="check_out">Giờ ra</label>
+            <input type="datetime-local" class="form-control <%= errorFor('check_out') ? 'is-invalid' : '' %>"
+                   id="check_out" name="check_out" value="<%= value('check_out') %>">
+            <% if (errorFor('check_out')) { %><div class="invalid-feedback"><%= errorFor('check_out') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="source">Nguồn chấm công</label>
+            <select class="form-select <%= errorFor('source') ? 'is-invalid' : '' %>" id="source" name="source">
+              <option value="Thủ công" <%= String(value('source') || 'Thủ công') === 'Thủ công' ? 'selected' : '' %>>Thủ công</option>
+              <option value="Camera" <%= value('source') === 'Camera' ? 'selected' : '' %>>Camera</option>
+              <option value="Self-service" <%= value('source') === 'Self-service' ? 'selected' : '' %>>Self-service</option>
+            </select>
+            <% if (errorFor('source')) { %><div class="invalid-feedback"><%= errorFor('source') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="form-field">
+            <label for="note">Ghi chú</label>
+            <input type="text" class="form-control <%= errorFor('note') ? 'is-invalid' : '' %>"
+                   id="note" name="note" maxlength="255" value="<%= value('note') %>" placeholder="Ví dụ: quên chấm công, xin bù công">
+            <% if (errorFor('note')) { %><div class="invalid-feedback"><%= errorFor('note') %></div><% } %>
+          </div>
+        </div>
+      </div>
+
+      <% if (item) { %>
+        <div class="alert alert-light border mt-3 mb-0">
+          <strong>Kết quả hiện tại:</strong>
+          <span class="badge badge-status <%= item.status === 'Đúng giờ' ? 'success' : (item.status === 'Vắng mặt' || item.status === 'Thiếu giờ' ? 'danger' : 'warning') %>"><%= item.status %></span>
+          · Công: <%= (Number(item.worked_minutes || 0) / 60).toFixed(1) %> giờ
+          · Trễ: <%= item.late_minutes || 0 %>' · Sớm: <%= item.early_minutes || 0 %>'
+          · OT: <%= (Number(item.overtime_minutes || 0) / 60).toFixed(1) %> giờ
+        </div>
+      <% } %>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Lưu chấm công' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="/attendance">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

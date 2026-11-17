@@ -1,0 +1,51 @@
+<%
+  function statusClass(status) {
+    var value = String(status || '');
+    if (value === 'Đã duyệt') return 'success';
+    if (value === 'Chờ duyệt') return 'warning';
+    return 'danger';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1>Đơn nghỉ của tôi</h1>
+    <p>Theo dõi trạng thái các đơn nghỉ phép bạn đã gửi.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Đơn nghỉ phép cá nhân</caption>
+        <thead>
+          <tr>
+            <th scope="col">Loại phép</th>
+            <th scope="col">Từ ngày</th>
+            <th scope="col">Đến ngày</th>
+            <th scope="col" class="numeric">Số ngày</th>
+            <th scope="col">Lý do</th>
+            <th scope="col">Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(function (row) { %>
+            <tr>
+              <td><%= row.leave_type_name %></td>
+              <td><%= formatDate(row.start_date) %></td>
+              <td><%= formatDate(row.end_date) %></td>
+              <td class="numeric"><%= formatNumber(row.total_days, 2) %></td>
+              <td><%= row.reason || '—' %></td>
+              <td><span class="badge badge-status <%= statusClass(row.status) %>"><%= row.status %></span></td>
+            </tr>
+          <% }); %>
+          <% if (!rows.length) { %>
+            <tr><td colspan="6" class="text-center text-muted py-4">Bạn chưa có đơn nghỉ nào.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination', { pagination: pagination, basePath: basePath, filterQuery: filterQuery }) %>
+  </div>
+</div>

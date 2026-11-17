@@ -1,0 +1,97 @@
+<%
+  function statusClass(status) {
+    if (status === 'Đang làm việc') return 'success';
+    if (status === 'Tạm nghỉ') return 'warning';
+    return 'danger';
+  }
+  function contractClass(status) {
+    if (status === 'Còn hạn') return 'success';
+    if (status === 'Sắp hết hạn') return 'warning';
+    if (status === 'Hết hạn') return 'danger';
+    return 'info';
+  }
+  const placeholderAvatar = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2265%22 font-size=%2236%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3ENV%3C/text%3E%3C/svg%3E';
+%>
+<div class="page-heading">
+  <div>
+    <h1>Hồ sơ nhân viên</h1>
+    <p>Thông tin cá nhân, công việc và hợp đồng của nhân viên.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-outline-secondary" href="/employees">
+      <i data-lucide="arrow-left" class="icon icon-sm" aria-hidden="true"></i> Danh sách
+    </a>
+    <a class="btn btn-primary" href="/employees/<%= employee.id %>/edit">
+      <i data-lucide="pencil" class="icon icon-sm" aria-hidden="true"></i> Chỉnh sửa
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <img class="avatar avatar-lg mx-auto mb-3" src="<%= employee.avatar_path || placeholderAvatar %>" alt="Ảnh đại diện của <%= employee.full_name %>">
+        <h2 class="h5 mb-1"><%= employee.full_name %></h2>
+        <p class="text-muted mb-2"><%= employee.employee_code %></p>
+        <span class="badge badge-status <%= statusClass(employee.status) %>"><%= employee.status %></span>
+        <hr>
+        <dl class="row text-start mb-0 small">
+          <dt class="col-5">Phòng ban</dt><dd class="col-7"><%= employee.department_name || '—' %></dd>
+          <dt class="col-5">Chức vụ</dt><dd class="col-7"><%= employee.position_name || '—' %></dd>
+          <dt class="col-5">Quản lý</dt><dd class="col-7"><%= employee.manager_name || '—' %></dd>
+          <dt class="col-5">Tài khoản</dt><dd class="col-7"><%= employee.username ? employee.username + ' (' + employee.role_name + ')' : 'Chưa có' %></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card mb-3">
+      <div class="card-header"><h2>Thông tin cá nhân</h2></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Giới tính</dt><dd class="col-sm-8"><%= employee.gender %></dd>
+          <dt class="col-sm-4">Ngày sinh</dt><dd class="col-sm-8"><%= employee.date_of_birth %></dd>
+          <dt class="col-sm-4">Số CCCD/CMND</dt><dd class="col-sm-8"><%= employee.id_card || '—' %></dd>
+          <dt class="col-sm-4">Điện thoại</dt><dd class="col-sm-8"><%= employee.phone || '—' %></dd>
+          <dt class="col-sm-4">Email</dt><dd class="col-sm-8"><%= employee.email || '—' %></dd>
+          <dt class="col-sm-4">Địa chỉ</dt><dd class="col-sm-8"><%= employee.address || '—' %></dd>
+          <dt class="col-sm-4">Ngày vào làm</dt><dd class="col-sm-8"><%= employee.hire_date %></dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h2>Hợp đồng</h2>
+        <a class="small" href="/contracts/create?employee_id=<%= employee.id %>">Thêm hợp đồng</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <caption class="visually-hidden">Danh sách hợp đồng của <%= employee.full_name %></caption>
+            <thead>
+              <tr><th scope="col">Số hợp đồng</th><th scope="col">Loại</th><th scope="col">Thời hạn</th><th scope="col" class="numeric">Lương cơ bản</th><th scope="col">Trạng thái</th></tr>
+            </thead>
+            <tbody>
+              <% if (contracts.length) { %>
+                <% contracts.forEach(function (item) { %>
+                  <tr>
+                    <td><strong><%= item.contract_no %></strong></td>
+                    <td><%= item.contract_type %></td>
+                    <td class="small"><%= item.start_date %> &ndash; <%= item.end_date %></td>
+                    <td class="numeric"><%= item.salary_base %></td>
+                    <td><span class="badge badge-status <%= contractClass(item.status) %>"><%= item.status %></span></td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr><td colspan="5" class="text-center text-muted py-4">Nhân viên này chưa có hợp đồng nào.</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

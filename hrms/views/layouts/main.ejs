@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<%
+  locals.appName = locals.appName || 'KIDS PARK HRMS';
+  locals.menu = Array.isArray(locals.menu) ? locals.menu : [];
+  locals.activeMenu = locals.activeMenu || { group: '', item: '' };
+  locals.badges = locals.badges || {};
+  locals.breadcrumbs = Array.isArray(locals.breadcrumbs) ? locals.breadcrumbs : [];
+  locals.notifications = Array.isArray(locals.notifications) ? locals.notifications : [];
+  locals.user = locals.user || null;
+  locals.csrfToken = locals.csrfToken || '';
+  locals.flash = locals.flash || {};
+  locals.title = locals.title || locals.appName;
+%>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="theme-color" content="#1e40af">
+  <meta name="description" content="Hệ thống quản lý nhân sự KIDS PARK">
+  <meta name="csrf-token" content="<%= csrfToken %>">
+
+  <title><%= title %></title>
+
+  <link rel="stylesheet" href="/vendor/fontsource/be-vietnam-pro/400.css">
+  <link rel="stylesheet" href="/vendor/fontsource/be-vietnam-pro/500.css">
+  <link rel="stylesheet" href="/vendor/fontsource/be-vietnam-pro/600.css">
+  <link rel="stylesheet" href="/vendor/fontsource/be-vietnam-pro/700.css">
+  <link rel="stylesheet" href="/vendor/fontsource/inter/400.css">
+  <link rel="stylesheet" href="/vendor/fontsource/inter/600.css">
+  <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="app-body">
+  <div class="app-root" x-data="appLayout()" x-init="init()" :class="{ 'is-sidebar-collapsed': sidebarCollapsed, 'is-mobile-nav-open': mobileNavOpen }" @keydown.escape.window="closeOverlays()">
+    <div class="app-shell">
+      <%- include('../partials/sidebar') %>
+
+      <div class="app-main">
+        <%- include('../partials/header') %>
+
+        <main class="app-content" id="mainContent" tabindex="-1">
+          <%- include('../partials/alerts') %>
+          <%- body %>
+        </main>
+
+        <footer class="app-footer">
+          <span>&copy; <%= new Date().getFullYear() %> KIDS PARK. Hệ thống quản lý nhân sự nội bộ.</span>
+          <span class="app-footer-meta">Phiên bản 1.0 &middot; <i data-lucide="shield-check" class="icon icon-xs" aria-hidden="true"></i> Dữ liệu được bảo vệ</span>
+        </footer>
+      </div>
+    </div>
+
+    <%- include('../partials/search') %>
+    <%- include('../partials/confirm-modal') %>
+    <%- include('../partials/toast') %>
+  </div>
+
+  <a class="skip-link" href="#mainContent">Chuyển đến nội dung chính</a>
+
+  <script src="/vendor/alpine/cdn.min.js" defer></script>
+  <script src="/vendor/lucide/dist/umd/lucide.min.js" defer></script>
+  <script src="/vendor/chartjs/chart.umd.js" defer></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js" defer></script>
+  <script src="/js/main.js" defer></script>
+  <script src="/js/dashboard.js" defer></script>
+  <script src="/js/reports.js" defer></script>
+</body>
+</html>

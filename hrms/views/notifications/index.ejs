@@ -1,0 +1,34 @@
+<div class="page-heading">
+  <div>
+    <h1>Thông báo</h1>
+    <p>Đơn từ chờ xử lý và hợp đồng sắp hết hạn trong phạm vi bạn quản lý.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <h2>Danh sách thông báo</h2>
+    <span class="text-muted small"><%= notifications.length %> thông báo</span>
+  </div>
+  <div class="card-body p-0">
+    <% if (notifications.length) { %>
+      <div class="list-group list-group-flush">
+        <% notifications.forEach(function (note) { %>
+          <a class="list-group-item list-group-item-action d-flex gap-3 py-3" href="<%= note.url %>">
+            <span class="notification-icon flex-shrink-0" aria-hidden="true"><i data-lucide="<%= note.icon %>" class="icon icon-sm"></i></span>
+            <span class="flex-grow-1 min-width-0">
+              <strong class="d-block"><%= note.title %></strong>
+              <span class="small text-muted d-block"><%= note.message %></span>
+            </span>
+            <small class="text-muted flex-shrink-0"><%= note.time %></small>
+          </a>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <div class="text-center text-muted py-5">
+        <i data-lucide="bell-off" class="icon mb-2" aria-hidden="true"></i>
+        <p class="mb-0">Không có thông báo nào.</p>
+      </div>
+    <% } %>
+  </div>
+</div>

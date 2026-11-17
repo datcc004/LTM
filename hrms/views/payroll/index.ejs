@@ -1,0 +1,101 @@
+<div class="page-heading">
+  <div>
+    <h1>Kỳ lương</h1>
+    <p>Tạo kỳ lương theo tháng, sinh phiếu từ công và tăng ca đã duyệt, sau đó chốt kỳ để khóa dữ liệu.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/payroll/create">
+      <i data-lucide="plus" class="icon icon-sm" aria-hidden="true"></i> Thêm kỳ lương
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/payroll" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterQ">Tìm kiếm</label>
+        <input type="search" class="form-control" id="filterQ" name="q" value="<%= query.q %>" placeholder="Mã kỳ lương (YYYY-MM)">
+        <label class="visually-hidden" for="filterStatus">Trạng thái</label>
+        <select class="form-select" id="filterStatus" name="status">
+          <option value="">Tất cả trạng thái</option>
+          <% statuses.forEach(function (status) { %>
+            <option value="<%= status %>" <%= query.status === status ? 'selected' : '' %>><%= status %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterYear">Năm</label>
+        <input type="number" class="form-control" id="filterYear" name="year" min="2000" max="2100" value="<%= query.year %>" placeholder="Năm">
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/payroll">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> kỳ lương</span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách kỳ lương</caption>
+        <thead>
+          <tr>
+            <th scope="col">Kỳ lương</th>
+            <th scope="col">Thời gian</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col" class="numeric">Số phiếu</th>
+            <th scope="col" class="numeric">Tổng thực lãnh</th>
+            <th scope="col">Người chốt</th>
+            <th scope="col" class="action-col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (records.length) { %>
+            <% records.forEach(function (item) { %>
+              <tr>
+                <td><strong><%= item.period_code %></strong></td>
+                <td><%= formatDate(item.start_date) %> – <%= formatDate(item.end_date) %></td>
+                <td>
+                  <% if (item.status === 'Đã chốt') { %>
+                    <span class="badge badge-status success">Đã chốt</span>
+                  <% } else { %>
+                    <span class="badge badge-status warning">Dự thảo</span>
+                  <% } %>
+                </td>
+                <td class="numeric"><%= formatNumber(item.payroll_count) %></td>
+                <td class="numeric"><%= formatMoney(item.total_net) %></td>
+                <td>
+                  <% if (item.locked_by_name) { %>
+                    <%= item.locked_by_name %><br><small class="text-muted"><%= formatDateTime(item.locked_at) %></small>
+                  <% } else { %>—<% } %>
+                </td>
+                <td class="action-col">
+                  <a class="btn btn-sm btn-outline-primary" href="/payroll/<%= item.id %>" aria-label="Xem kỳ lương <%= item.period_code %>">
+                    <i data-lucide="eye" class="icon icon-xs" aria-hidden="true"></i> Chi tiết
+                  </a>
+                  <% if (item.status === 'Dự thảo') { %>
+                    <a class="btn btn-sm btn-outline-secondary" href="/payroll/<%= item.id %>/edit" aria-label="Sửa kỳ lương <%= item.period_code %>">
+                      <i data-lucide="pencil" class="icon icon-xs" aria-hidden="true"></i> Sửa
+                    </a>
+                    <form method="post" action="/payroll/<%= item.id %>" class="d-inline">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="_method" value="delete">
+                      <button type="submit" class="btn btn-sm btn-outline-danger"
+                              data-confirm="Bạn có chắc muốn xóa kỳ lương <%= item.period_code %>?"
+                              data-confirm-title="Xác nhận xóa"
+                              data-confirm-danger>
+                        <i data-lucide="trash-2" class="icon icon-xs" aria-hidden="true"></i> Xóa
+                      </button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="7" class="text-center text-muted py-4">Chưa có kỳ lương nào.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

@@ -1,0 +1,76 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p><%= item ? 'Cập nhật ca làm việc đã phân.' : 'Chọn nhân viên, ca và ngày làm việc.' %></p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Thông tin phân ca</h2></div>
+  <div class="card-body">
+    <form action="<%= item ? '/schedules/' + item.id : '/schedules' %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (item) { %><input type="hidden" name="_method" value="put"><% } %>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="employee_id">Nhân viên <span class="text-danger">*</span></label>
+            <select class="form-select <%= errorFor('employee_id') ? 'is-invalid' : '' %>" id="employee_id" name="employee_id" required>
+              <option value="">— Chọn nhân viên —</option>
+              <% employees.forEach(function (option) { %>
+                <option value="<%= option.id %>" <%= String(value('employee_id')) === String(option.id) ? 'selected' : '' %>><%= option.full_name %> (<%= option.employee_code %>)</option>
+              <% }); %>
+            </select>
+            <% if (errorFor('employee_id')) { %><div class="invalid-feedback"><%= errorFor('employee_id') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="shift_id">Ca làm việc <span class="text-danger">*</span></label>
+            <select class="form-select <%= errorFor('shift_id') ? 'is-invalid' : '' %>" id="shift_id" name="shift_id" required>
+              <option value="">— Chọn ca —</option>
+              <% shifts.forEach(function (option) { %>
+                <option value="<%= option.id %>" <%= String(value('shift_id')) === String(option.id) ? 'selected' : '' %>><%= option.name %> (<%= String(option.start_time).slice(0, 5) %> – <%= String(option.end_time).slice(0, 5) %>)</option>
+              <% }); %>
+            </select>
+            <% if (errorFor('shift_id')) { %><div class="invalid-feedback"><%= errorFor('shift_id') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="work_date">Ngày làm việc <span class="text-danger">*</span></label>
+            <input type="date" class="form-control <%= errorFor('work_date') ? 'is-invalid' : '' %>"
+                   id="work_date" name="work_date" required value="<%= value('work_date') %>">
+            <% if (errorFor('work_date')) { %><div class="invalid-feedback"><%= errorFor('work_date') %></div><% } else { %><span class="form-hint">Mỗi nhân viên chỉ có một ca cho mỗi ngày.</span><% } %>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="form-field">
+            <label for="note">Ghi chú</label>
+            <input type="text" class="form-control <%= errorFor('note') ? 'is-invalid' : '' %>"
+                   id="note" name="note" maxlength="255" value="<%= value('note') %>" placeholder="Ví dụ: thay ca với bạn A">
+            <% if (errorFor('note')) { %><div class="invalid-feedback"><%= errorFor('note') %></div><% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Thêm lịch ca' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="/schedules">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

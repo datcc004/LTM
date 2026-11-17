@@ -1,0 +1,60 @@
+<div class="page-heading">
+  <div>
+    <h1>Cấu hình hệ thống</h1>
+    <p>Thay đổi giá trị cấu hình dùng cho tính lương, chấm công và các quy trình nghiệp vụ. Khóa cấu hình là cố định.</p>
+  </div>
+</div>
+
+<% groups.forEach(function (group) { %>
+  <div class="card mb-3">
+    <div class="card-header"><h2><%= group.label %></h2></div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <caption class="visually-hidden">Cấu hình nhóm <%= group.label %></caption>
+          <thead>
+            <tr>
+              <th scope="col" style="width: 28%">Cấu hình</th>
+              <th scope="col">Mô tả</th>
+              <th scope="col" style="width: 30%">Giá trị</th>
+              <th scope="col" style="width: 12%">Cập nhật</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% group.settings.forEach(function (setting) { %>
+              <tr>
+                <td>
+                  <strong><%= setting.description || setting.setting_key %></strong>
+                  <span class="d-block text-muted small"><%= setting.setting_key %></span>
+                </td>
+                <td><%= setting.description || '—' %></td>
+                <td>
+                  <form method="post" action="/admin/settings/update" class="d-flex gap-2 align-items-center">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="setting_key" value="<%= setting.setting_key %>">
+                    <label class="visually-hidden" for="value-<%= setting.id %>">Giá trị <%= setting.setting_key %></label>
+                    <input type="text" class="form-control form-control-sm" id="value-<%= setting.id %>"
+                           name="setting_value" value="<%= setting.setting_value %>" required>
+                    <button type="submit" class="btn btn-sm btn-primary" title="Lưu <%= setting.setting_key %>">
+                      <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i>
+                    </button>
+                  </form>
+                </td>
+                <td>
+                  <span class="d-block small"><%= setting.updated_by_name || '—' %></span>
+                  <span class="text-muted small"><%= formatDateTime(setting.updated_at) %></span>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<% }); %>
+
+<% if (!groups.length) { %>
+  <div class="card">
+    <div class="card-body text-center text-muted py-4">Chưa có cấu hình nào. Chạy <code>npm run db:init</code> để khởi tạo dữ liệu mặc định.</div>
+  </div>
+<% } %>

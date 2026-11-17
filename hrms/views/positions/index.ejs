@@ -1,0 +1,92 @@
+<div class="page-heading">
+  <div>
+    <h1>Chức vụ</h1>
+    <p>Quản lý danh mục chức vụ và phân bổ theo phòng ban.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/positions/create">
+      <i data-lucide="plus" class="icon icon-sm" aria-hidden="true"></i> Thêm chức vụ
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form class="data-table-toolbar" method="get" action="/positions" role="search">
+      <div class="table-filter">
+        <label class="visually-hidden" for="filterCode">Tìm chức vụ</label>
+        <input type="search" class="form-control" id="filterCode" name="q" placeholder="Mã hoặc tên chức vụ" value="<%= query.q %>">
+        <label class="visually-hidden" for="filterDepartment">Phòng ban</label>
+        <select class="form-select" id="filterDepartment" name="department_id">
+          <option value="">Tất cả phòng ban</option>
+          <% departments.forEach(function (option) { %>
+            <option value="<%= option.id %>" <%= query.department_id === String(option.id) ? 'selected' : '' %>><%= option.name %></option>
+          <% }); %>
+        </select>
+        <label class="visually-hidden" for="filterActive">Trạng thái</label>
+        <select class="form-select" id="filterActive" name="is_active">
+          <option value="">Tất cả trạng thái</option>
+          <option value="1" <%= query.is_active === '1' ? 'selected' : '' %>>Đang hoạt động</option>
+          <option value="0" <%= query.is_active === '0' ? 'selected' : '' %>>Ngừng hoạt động</option>
+        </select>
+        <button type="submit" class="btn btn-outline-secondary">
+          <i data-lucide="filter" class="icon icon-sm" aria-hidden="true"></i> Lọc
+        </button>
+        <a class="btn btn-outline-secondary" href="/positions">Xóa lọc</a>
+      </div>
+      <span class="pagination-info">Tổng <%= formatNumber(pagination.total) %> chức vụ</span>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <caption class="visually-hidden">Danh sách chức vụ</caption>
+        <thead>
+          <tr>
+            <th scope="col">Mã</th>
+            <th scope="col">Tên chức vụ</th>
+            <th scope="col">Phòng ban</th>
+            <th scope="col" class="numeric">Nhân viên</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col" class="action-col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (positions.length) { %>
+            <% positions.forEach(function (item) { %>
+              <tr>
+                <td><strong><%= item.code %></strong></td>
+                <td><%= item.name %></td>
+                <td><%= item.department_name || 'Dùng chung' %></td>
+                <td class="numeric"><%= formatNumber(item.employee_count) %></td>
+                <td>
+                  <span class="badge badge-status <%= item.is_active ? 'success' : 'info' %>">
+                    <%= item.is_active ? 'Đang hoạt động' : 'Ngừng hoạt động' %>
+                  </span>
+                </td>
+                <td class="action-col">
+                  <a class="btn btn-sm btn-outline-secondary" href="/positions/<%= item.id %>/edit" aria-label="Sửa chức vụ <%= item.name %>">
+                    <i data-lucide="pencil" class="icon icon-xs" aria-hidden="true"></i> Sửa
+                  </a>
+                  <form method="post" action="/positions/<%= item.id %>" class="d-inline">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="_method" value="delete">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            data-confirm="Bạn có chắc muốn xóa chức vụ <%= item.name %>? Chức vụ chỉ xóa được khi không còn nhân viên đảm nhiệm."
+                            data-confirm-title="Xác nhận xóa chức vụ"
+                            data-confirm-danger>
+                      <i data-lucide="trash-2" class="icon icon-xs" aria-hidden="true"></i> Xóa
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr><td colspan="6" class="text-center text-muted py-4">Không có chức vụ nào phù hợp với bộ lọc.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination') %>
+  </div>
+</div>

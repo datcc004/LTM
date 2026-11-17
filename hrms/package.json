@@ -1,0 +1,50 @@
+{
+  "name": "kids-park-hrms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hệ thống quản lý nhân sự KIDS PARK - Enterprise SaaS HRMS",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "db:init": "node scripts/init-db.js",
+    "db:fresh": "node scripts/init-db.js --fresh",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "@fontsource/be-vietnam-pro": "^5.1.1",
+    "@fontsource/inter": "^5.1.1",
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "alpinejs": "^3.14.9",
+    "bcryptjs": "^3.0.3",
+    "bootstrap": "^5.3.3",
+    "chart.js": "^4.4.7",
+    "connect-flash": "^0.1.1",
+    "cookie-parser": "^1.4.7",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.0.0",
+    "method-override": "^3.0.0",
+    "lucide": "^0.468.0",
+    "multer": "^2.0.2",
+    "mysql2": "^3.11.0",
+    "pdfkit": "^0.15.2",
+    "sanitize-html": "^2.13.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
+}

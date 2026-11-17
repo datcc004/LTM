@@ -1,0 +1,90 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (entry) { return entry.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p>Người phụ thuộc được giảm trừ 4.400.000đ/người khi tính thuế thu nhập cá nhân.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Thông tin cấu trúc lương</h2></div>
+  <div class="card-body">
+    <form action="<%= item ? '/salary-structures/' + item.id : '/salary-structures' %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (item) { %><input type="hidden" name="_method" value="put"><% } %>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="employee_id">Nhân viên <span class="text-danger">*</span></label>
+            <select class="form-select <%= errorFor('employee_id') ? 'is-invalid' : '' %>" id="employee_id" name="employee_id" required>
+              <option value="">— Chọn nhân viên —</option>
+              <% employees.forEach(function (employee) { %>
+                <option value="<%= employee.id %>" <%= String(value('employee_id')) === String(employee.id) ? 'selected' : '' %>>
+                  <%= employee.employee_code %> — <%= employee.full_name %>
+                </option>
+              <% }); %>
+            </select>
+            <% if (errorFor('employee_id')) { %><div class="invalid-feedback"><%= errorFor('employee_id') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="effective_from">Ngày áp dụng <span class="text-danger">*</span></label>
+            <input type="date" class="form-control <%= errorFor('effective_from') ? 'is-invalid' : '' %>"
+                   id="effective_from" name="effective_from" required value="<%= value('effective_from') %>">
+            <% if (errorFor('effective_from')) { %><div class="invalid-feedback"><%= errorFor('effective_from') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="base_salary">Lương cơ bản <span class="text-danger">*</span></label>
+            <input type="number" class="form-control <%= errorFor('base_salary') ? 'is-invalid' : '' %>"
+                   id="base_salary" name="base_salary" min="0" step="1000" required value="<%= value('base_salary') %>">
+            <% if (errorFor('base_salary')) { %><div class="invalid-feedback"><%= errorFor('base_salary') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="allowance">Phụ cấp <span class="text-danger">*</span></label>
+            <input type="number" class="form-control <%= errorFor('allowance') ? 'is-invalid' : '' %>"
+                   id="allowance" name="allowance" min="0" step="1000" required value="<%= value('allowance') %>">
+            <% if (errorFor('allowance')) { %><div class="invalid-feedback"><%= errorFor('allowance') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-field">
+            <label for="dependents_count">Số người phụ thuộc <span class="text-danger">*</span></label>
+            <input type="number" class="form-control <%= errorFor('dependents_count') ? 'is-invalid' : '' %>"
+                   id="dependents_count" name="dependents_count" min="0" max="20" step="1" required value="<%= value('dependents_count') %>">
+            <% if (errorFor('dependents_count')) { %><div class="invalid-feedback"><%= errorFor('dependents_count') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="form-field">
+            <label for="note">Ghi chú</label>
+            <input type="text" class="form-control <%= errorFor('note') ? 'is-invalid' : '' %>"
+                   id="note" name="note" maxlength="255" value="<%= value('note') %>" placeholder="Ghi chú nội bộ">
+            <% if (errorFor('note')) { %><div class="invalid-feedback"><%= errorFor('note') %></div><% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Thêm cấu trúc lương' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="/salary-structures">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>

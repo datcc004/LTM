@@ -1,0 +1,100 @@
+<%
+  const errors = (typeof validationErrors !== 'undefined' && Array.isArray(validationErrors)) ? validationErrors : [];
+  function errorFor(field) {
+    const found = errors.find(function (item) { return item.field === field; });
+    return found ? found.message : '';
+  }
+  function value(field) {
+    return (values && values[field] !== undefined && values[field] !== null) ? values[field] : '';
+  }
+%>
+<div class="page-heading">
+  <div>
+    <h1><%= title %></h1>
+    <p>Nhập khoảng thời gian nghỉ; hệ thống tự tính số ngày công, bỏ qua Thứ 7, Chủ nhật và ngày lễ.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Thông tin đơn nghỉ</h2></div>
+  <div class="card-body">
+    <form action="<%= item ? '/leave-requests/' + item.id : '/leave-requests' %>" method="post" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (item) { %><input type="hidden" name="_method" value="put"><% } %>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="employee_id">Nhân viên <span class="text-danger">*</span></label>
+            <select class="form-select <%= errorFor('employee_id') ? 'is-invalid' : '' %>" id="employee_id" name="employee_id" required>
+              <option value="">— Chọn nhân viên —</option>
+              <% employees.forEach(function (option) { %>
+                <option value="<%= option.id %>" <%= String(value('employee_id')) === String(option.id) ? 'selected' : '' %>><%= option.full_name %> (<%= option.employee_code %>)</option>
+              <% }); %>
+            </select>
+            <% if (errorFor('employee_id')) { %><div class="invalid-feedback"><%= errorFor('employee_id') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="leave_type_id">Loại phép <span class="text-danger">*</span></label>
+            <select class="form-select <%= errorFor('leave_type_id') ? 'is-invalid' : '' %>" id="leave_type_id" name="leave_type_id" required>
+              <option value="">— Chọn loại phép —</option>
+              <% leaveTypes.forEach(function (option) { %>
+                <option value="<%= option.id %>" <%= String(value('leave_type_id')) === String(option.id) ? 'selected' : '' %>>
+                  <%= option.name %><% if (option.max_days_per_year !== null) { %> (tối đa <%= option.max_days_per_year %> ngày/năm)<% } else { %> (không giới hạn quỹ)<% } %>
+                </option>
+              <% }); %>
+            </select>
+            <% if (errorFor('leave_type_id')) { %><div class="invalid-feedback"><%= errorFor('leave_type_id') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="start_date">Ngày bắt đầu <span class="text-danger">*</span></label>
+            <input type="date" class="form-control <%= errorFor('start_date') ? 'is-invalid' : '' %>"
+                   id="start_date" name="start_date" required value="<%= value('start_date') %>">
+            <% if (errorFor('start_date')) { %><div class="invalid-feedback"><%= errorFor('start_date') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-field">
+            <label for="end_date">Ngày kết thúc <span class="text-danger">*</span></label>
+            <input type="date" class="form-control <%= errorFor('end_date') ? 'is-invalid' : '' %>"
+                   id="end_date" name="end_date" required value="<%= value('end_date') %>">
+            <% if (errorFor('end_date')) { %><div class="invalid-feedback"><%= errorFor('end_date') %></div><% } %>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="form-field">
+            <label for="reason">Lý do nghỉ</label>
+            <textarea class="form-control <%= errorFor('reason') ? 'is-invalid' : '' %>" id="reason" name="reason" rows="4" maxlength="2000" placeholder="Ví dụ: việc gia đình, khám sức khỏe định kỳ"><%= value('reason') %></textarea>
+            <% if (errorFor('reason')) { %><div class="invalid-feedback"><%= errorFor('reason') %></div><% } else { %><span class="form-hint">Tối đa 2000 ký tự.</span><% } %>
+          </div>
+        </div>
+      </div>
+
+      <% if (item) { %>
+        <div class="alert alert-light border mt-3 mb-0">
+          <strong>Đơn hiện tại:</strong>
+          <span class="badge badge-status <%= item.status === 'Đã duyệt' ? 'success' : (item.status === 'Từ chối' ? 'danger' : 'warning') %>"><%= item.status %></span>
+          · <%= formatNumber(item.total_days, 1) %> ngày
+          · <%= formatDate(item.start_date, 'DD/MM/YYYY') %>
+          <% if (item.start_date !== item.end_date) { %> → <%= formatDate(item.end_date, 'DD/MM/YYYY') %><% } %>
+        </div>
+      <% } else { %>
+        <div class="alert alert-light border mt-3 mb-0">
+          <strong>Lưu ý:</strong> Đơn mới có trạng thái <span class="badge badge-status warning">Chờ duyệt</span>.
+          Quỹ phép chỉ được trừ khi đơn được duyệt; đơn đã duyệt không cho chỉnh sửa.
+        </div>
+      <% } %>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save" class="icon icon-sm" aria-hidden="true"></i> <%= item ? 'Lưu thay đổi' : 'Tạo đơn nghỉ' %>
+        </button>
+        <a class="btn btn-outline-secondary" href="/leave-requests">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>
